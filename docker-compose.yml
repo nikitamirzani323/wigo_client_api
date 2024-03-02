@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  wigo-client-api:
+    container_name: wigo-client-api
+    image: wigo-client-api:0.0.0.1
+    build: .
+    ports:
+      - 1115:1115
+    restart: always
