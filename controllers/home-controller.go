@@ -218,11 +218,11 @@ func ListResult(c *fiber.Ctx) error {
 				"record":  nil,
 			})
 		}
-		helpers.SetRedis(invoice_result_redis+"_"+strings.ToLower(client.Invoice_company), result, 60*time.Minute)
-		fmt.Printf("RESULT DATABASE %s-%s\n", client.Invoice_company)
+		helpers.SetRedis(invoice_result_redis+"_"+strings.ToLower(client.Invoice_company), result, 30*time.Minute)
+		fmt.Printf("RESULT DATABASE %s\n", client.Invoice_company)
 		return c.JSON(result)
 	} else {
-		fmt.Printf("RESULT CACHE %s-%s\n", client.Invoice_company)
+		fmt.Printf("RESULT CACHE %s\n", client.Invoice_company)
 		return c.JSON(fiber.Map{
 			"status":  fiber.StatusOK,
 			"message": "Success",
