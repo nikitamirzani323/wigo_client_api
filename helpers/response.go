@@ -20,12 +20,10 @@ type ResponseCard struct {
 	Time   string `json:"time"`
 }
 type Responsetransaksi struct {
-	Status      int         `json:"status"`
-	Message     string      `json:"message"`
-	Idtransaksi string      `json:"idtransaksi"`
-	Card_game   interface{} `json:"card_game"`
-	Card_length int         `json:"card_length"`
-	Time        string      `json:"time"`
+	Status      int    `json:"status"`
+	Message     string `json:"message"`
+	Idtransaksi string `json:"invoice"`
+	Time        string `json:"time"`
 }
 type Responsecompany struct {
 	Status   int         `json:"status"`
