@@ -45,10 +45,9 @@ type Controller_transaksisave struct {
 
 // idtransaksi, resulcard_win string, round_bet, bet, c_before, c_after, win, idpoin int
 type Controller_transaksidetailsave struct {
-	Transaksidetail_company     string  `json:"transaksidetail_company" validate:"required"`
-	Transaksidetail_idtransaksi string  `json:"transaksidetail_idtransaksi" validate:"required"`
-	Transaksidetail_username    string  `json:"transaksidetail_username" validate:"required"`
-	Transaksidetail_nomor       string  `json:"transaksidetail_nomor" validate:"required"`
-	Transaksidetail_bet         int     `json:"transaksidetail_bet"`
-	Transaksidetail_multiplier  float64 `json:"transaksidetail_multiplier"`
+	Transaksidetail_company     string `json:"transaksidetail_company" validate:"required"`
+	Transaksidetail_idtransaksi string `json:"transaksidetail_idtransaksi" validate:"required"`
+	Transaksidetail_username    string `json:"transaksidetail_username" validate:"required"`
+	Transaksidetail_totalbet    int    `json:"transaksidetail_totalbet" validate:"required"`
+	Transaksidetail_listdatabet string `json:"transaksidetail_listdatabet" validate:"required"`
 }

@@ -265,10 +265,10 @@ func TransaksidetailSave(c *fiber.Ctx) error {
 	// temp_decp := helpers.Decryption(name)
 	// client_admin, _ := helpers.Parsing_Decry(temp_decp, "==")
 
-	//idcompany, idtransaksi, username, nomor string, bet int, multiplier float64
+	//idcompany, idtransaksi, username, listdatabet string, total_bet int
 	result, err := models.Save_transaksidetail(client.Transaksidetail_company,
 		client.Transaksidetail_idtransaksi, client.Transaksidetail_username,
-		client.Transaksidetail_nomor, client.Transaksidetail_bet, client.Transaksidetail_multiplier)
+		client.Transaksidetail_listdatabet, client.Transaksidetail_totalbet)
 
 	if err != nil {
 		c.Status(fiber.StatusBadRequest)

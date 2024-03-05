@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/buger/jsonparser"
 	"github.com/gofiber/fiber/v2"
 	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/configs"
 	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/db"
@@ -180,7 +181,7 @@ func Save_transaksi(idcompany, idcurr string) (helpers.Responsetransaksi, error)
 
 	return res, nil
 }
-func Save_transaksidetail(idcompany, idtransaksi, username, nomor string, bet int, multiplier float64) (helpers.Response, error) {
+func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, total_bet int) (helpers.Response, error) {
 	var res helpers.Response
 	msg := "Failed"
 	tglnow, _ := goment.New()
@@ -191,31 +192,37 @@ func Save_transaksidetail(idcompany, idtransaksi, username, nomor string, bet in
 
 	status = _GetInfo_Transaksi(tbl_trx_transaksi, idtransaksi)
 	if status == "OPEN" {
-		sql_insert := `
-			insert into
-			` + tbl_trx_transaksidetail + ` (
-				idtransaksidetail, idtransaksi , username_client, nomor, 
-				bet, multiplier, status_transaksidetail, 
-				create_transaksidetail, createdate_transaksidetail  
-			) values (
-				$1, $2, $3, $4, 
-				$5, $6, $7,   
-				$8, $9     
-			)
+		json := []byte(listdatabet)
+		jsonparser.ArrayEach(json, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			nomor, _ := jsonparser.GetString(value, "nomor")
+			bet, _ := jsonparser.GetInt(value, "bet")
+			multiplier, _ := jsonparser.GetFloat(value, "multiplier")
+
+			sql_insert := `
+				insert into
+				` + tbl_trx_transaksidetail + ` (
+					idtransaksidetail, idtransaksi , username_client, nomor, 
+					bet, multiplier, status_transaksidetail, 
+					create_transaksidetail, createdate_transaksidetail  
+				) values (
+					$1, $2, $3, $4, 
+					$5, $6, $7,   
+					$8, $9     
+				)
 			`
 
-		field_column := tbl_trx_transaksidetail + tglnow.Format("YYYY") + tglnow.Format("MM")
-		idrecord_counter := Get_counter(field_column)
-		idrecrod_value := tglnow.Format("YY") + tglnow.Format("MM") + tglnow.Format("DD") + tglnow.Format("HH") + strconv.Itoa(idrecord_counter)
-		flag_insert, msg_insert := Exec_SQL(sql_insert, tbl_trx_transaksidetail, "INSERT",
-			idrecrod_value, idtransaksi, username, nomor,
-			bet, multiplier, "RUNNING",
-			"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"))
+			field_column := tbl_trx_transaksidetail + tglnow.Format("YYYY") + tglnow.Format("MM")
+			idrecord_counter := Get_counter(field_column)
+			idrecrod_value := tglnow.Format("YY") + tglnow.Format("MM") + tglnow.Format("DD") + tglnow.Format("HH") + strconv.Itoa(idrecord_counter)
+			flag_insert, msg_insert := Exec_SQL(sql_insert, tbl_trx_transaksidetail, "INSERT",
+				idrecrod_value, idtransaksi, username, nomor,
+				bet, multiplier, "RUNNING",
+				"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"))
 
-		if flag_insert {
-			msg = "Succes"
+			if flag_insert {
+				msg = "Succes"
 
-			sql_update := `
+				sql_update := `
 				UPDATE 
 				` + tbl_trx_transaksi + `  
 				SET total_bet=$1,
@@ -223,18 +230,19 @@ func Save_transaksidetail(idcompany, idtransaksi, username, nomor string, bet in
 				WHERE idtransaksi=$4         
 			`
 
-			flag_update, msg_update := Exec_SQL(sql_update, tbl_trx_transaksi, "UPDATE",
-				_GetTotalBet_Transaksi(tbl_trx_transaksidetail, idtransaksi),
-				"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"), idtransaksi)
+				flag_update, msg_update := Exec_SQL(sql_update, tbl_trx_transaksi, "UPDATE",
+					_GetTotalBet_Transaksi(tbl_trx_transaksidetail, idtransaksi),
+					"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"), idtransaksi)
 
-			if flag_update {
-				msg = "Succes"
+				if flag_update {
+					msg = "Succes"
+				} else {
+					fmt.Println(msg_update)
+				}
 			} else {
-				fmt.Println(msg_update)
+				fmt.Println(msg_insert)
 			}
-		} else {
-			fmt.Println(msg_insert)
-		}
+		})
 
 	}
 
