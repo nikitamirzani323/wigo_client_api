@@ -43,7 +43,7 @@ func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) 
 	sql_select += "WHERE tgltransaksi >='" + tglbefore + "' "
 	sql_select += "AND tgltransaksi <='" + tglskrg + "' "
 	sql_select += "AND username_client ='" + username + "' "
-	sql_select += "ORDER BY idtransaksidetail DESC  LIMIT 31 "
+	sql_select += "ORDER BY idtransaksidetail DESC  LIMIT 60 "
 
 	row, err := con.QueryContext(ctx, sql_select)
 	helpers.ErrorCheck(err)
@@ -99,20 +99,22 @@ func Fetch_result(idcompany string) (helpers.Response, error) {
 	_, tbl_trx_transaksi, _, _ := Get_mappingdatabase(idcompany)
 
 	tglnow, _ := goment.New()
-	tglskrg := tglnow.Format("YYYY-MM-DD HH:mm:ss")
-	tglbefore := tglnow.Add(-31, "days").Format("YYYY-MM-DD HH:mm:ss")
-	fmt.Println("tgl skrg :" + tglskrg)
-	fmt.Println("tgl before :" + tglbefore)
+	// tglskrg := tglnow.Format("YYYY-MM-DD HH:mm:ss")
+	// tglbefore := tglnow.Add(-31, "days").Format("YYYY-MM-DD HH:mm:ss")
+	tglstart := tglnow.Format("YYYY-MM-DD") + " " + " 00:00:00"
+	tgltutup := tglnow.Format("YYYY-MM-DD") + " " + " 23:59:50"
+	fmt.Println("tgl skrg :" + tglstart)
+	fmt.Println("tgl before :" + tgltutup)
 
 	sql_select := ""
 	sql_select += "SELECT "
 	sql_select += "idtransaksi , to_char(COALESCE(createdate_transaksi,now()), 'YYYY-MM-DD HH24:MI:SS') as datetransaksi,  "
 	sql_select += "resultwigo  "
 	sql_select += "FROM " + tbl_trx_transaksi + " "
-	sql_select += "WHERE createdate_transaksi >='" + tglbefore + "' "
-	sql_select += "AND createdate_transaksi <='" + tglskrg + "' "
+	sql_select += "WHERE createdate_transaksi >='" + tglstart + "' "
+	sql_select += "AND createdate_transaksi <='" + tgltutup + "' "
 	sql_select += "AND resultwigo!='' "
-	sql_select += "ORDER BY createdate_transaksi DESC LIMIT 60"
+	sql_select += "ORDER BY createdate_transaksi DESC LIMIT 100"
 
 	row, err := con.QueryContext(ctx, sql_select)
 	helpers.ErrorCheck(err)
