@@ -92,6 +92,46 @@ func CheckToken(c *fiber.Ctx) error {
 		obj_record.Status = int(status_RD)
 		obj_record.Message = message_RD
 		obj_record.Record = arraobj
+
+		//CONFIG
+		fieldconfig_redis := "CONFIG_ALL_NUKE"
+		resultredis_conf, flag_conf := helpers.GetRedis(fieldconfig_redis)
+		jsonredis_conf := []byte(resultredis_conf)
+		// currRD, _ := jsonparser.GetString(jsonredis_conf, "curr")
+		// minbetRD, _ := jsonparser.GetInt(jsonredis_conf, "minbet")
+		// maxbetRD, _ := jsonparser.GetInt(jsonredis_conf, "maxbet")
+		win_angkaRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_angka")
+		win_redblackRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_redblack")
+		win_lineRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_line")
+		status_redblacklineRD, _ := jsonparser.GetString(jsonredis_conf, "status_redblackline")
+		sstatus_maintenanceRD, _ := jsonparser.GetString(jsonredis_conf, "status_maintenance")
+
+		engine_win_angka := 0.0
+		engine_win_redblack := 0.0
+		engine_win_line := 0.0
+		engine_status_game_redblackline := ""
+		engine_status_maintenance := ""
+
+		if flag_conf {
+			fmt.Println("CONF CACHE")
+
+			engine_win_angka = float64(win_angkaRD)
+			engine_win_redblack = float64(win_redblackRD)
+			engine_win_line = float64(win_lineRD)
+			engine_status_game_redblackline = status_redblacklineRD
+			engine_status_maintenance = sstatus_maintenanceRD
+		} else {
+			fmt.Println("CONF DATABASE")
+
+			win_angkaDB, win_redblackDB, win_lineDB, status_redblacklineDB, status_maintenanceDB := models.GetInfo_CompanyConf("NUKE")
+
+			engine_win_angka = win_angkaDB
+			engine_win_redblack = win_redblackDB
+			engine_win_line = win_lineDB
+			engine_status_game_redblackline = status_redblacklineDB
+			engine_status_maintenance = status_maintenanceDB
+		}
+
 		if !flag {
 			result, err := models.Fetch_listbet("NUKE")
 			if err != nil {
@@ -105,24 +145,32 @@ func CheckToken(c *fiber.Ctx) error {
 			helpers.SetRedis(listmoney_redis+"_NUKE", result, 60*time.Minute)
 			fmt.Println("LISTBET DATABASE")
 			return c.JSON(fiber.Map{
-				"status":            fiber.StatusOK,
-				"client_company":    "NUKE",
-				"client_name":       "developer",
-				"client_username":   "developer",
-				"client_credit":     100000,
-				"client_listbet":    result,
-				"engine_multiplier": 5,
+				"status":                          fiber.StatusOK,
+				"client_company":                  "NUKE",
+				"client_name":                     "developer",
+				"client_username":                 "developer",
+				"client_credit":                   100000,
+				"client_listbet":                  result,
+				"engine_multiplier_angka":         engine_win_angka,
+				"engine_multiplier_redblack":      engine_win_redblack,
+				"engine_multiplier_line":          engine_win_line,
+				"engine_status_game_redblackline": engine_status_game_redblackline,
+				"engine_status_maintenance":       engine_status_maintenance,
 			})
 		} else {
 			fmt.Println("LISTBET CACHE")
 			return c.JSON(fiber.Map{
-				"status":            fiber.StatusOK,
-				"client_company":    "NUKE",
-				"client_name":       "developer",
-				"client_username":   "developer",
-				"client_credit":     100000,
-				"client_listbet":    obj_record,
-				"engine_multiplier": 5,
+				"status":                          fiber.StatusOK,
+				"client_company":                  "NUKE",
+				"client_name":                     "developer",
+				"client_username":                 "developer",
+				"client_credit":                   100000,
+				"client_listbet":                  obj_record,
+				"engine_multiplier_angka":         engine_win_angka,
+				"engine_multiplier_redblack":      engine_win_redblack,
+				"engine_multiplier_line":          engine_win_line,
+				"engine_status_game_redblackline": engine_status_game_redblackline,
+				"engine_status_maintenance":       engine_status_maintenance,
 			})
 		}
 

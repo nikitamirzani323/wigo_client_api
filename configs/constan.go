@@ -1,12 +1,14 @@
 package configs
 
 const (
-	DB_tbl_counter           string = "tbl_counter"
-	DB_tbl_admin             string = "tbl_admin"
-	DB_tbl_admingroup        string = "tbl_admingroup"
-	DB_tbl_mst_listpoint     string = "tbl_mst_listpoint"
-	DB_tbl_mst_listbet       string = "tbl_mst_listbet"
-	DB_tbl_mst_company_money string = "tbl_mst_company_money"
+	DB_tbl_counter            string = "tbl_counter"
+	DB_tbl_admin              string = "tbl_admin"
+	DB_tbl_admingroup         string = "tbl_admingroup"
+	DB_tbl_mst_listpoint      string = "tbl_mst_listpoint"
+	DB_tbl_mst_listbet        string = "tbl_mst_listbet"
+	DB_tbl_mst_company        string = "tbl_mst_company"
+	DB_tbl_mst_company_money  string = "tbl_mst_company_money"
+	DB_tbl_mst_company_config string = "tbl_mst_company_config"
 
 	STATUS_NEW      string = "background:#0dcaf0;font-weight:bold;color:black;"
 	STATUS_RUNNING  string = "background:#FFEB3B;font-weight:bold;color:black;"
