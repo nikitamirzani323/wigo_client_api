@@ -1,20 +1,12 @@
 package configs
 
 const (
-	DB_tbl_counter               string = "tbl_counter"
-	DB_tbl_admin                 string = "tbl_admin"
-	DB_tbl_admingroup            string = "tbl_admingroup"
-	DB_tbl_mst_listpoint         string = "tbl_mst_listpoint"
-	DB_tbl_mst_listbet           string = "tbl_mst_listbet"
-	DB_tbl_mst_curr              string = "tbl_mst_currency"
-	DB_tbl_mst_company           string = "tbl_mst_company"
-	DB_tbl_mst_company_adminrule string = "tbl_mst_company_adminrule"
-	DB_tbl_mst_company_admin     string = "tbl_mst_company_admin"
-	DB_tbl_trx_transaksi         string = "tbl_trx_transaksi"
-	DB_tbl_trx_transaksidetail   string = "tbl_trx_transaksidetail"
-	DB_tbl_trx_pattern           string = "tbl_trx_pattern"
-	DB_tbl_trx_listpattern       string = "tbl_trx_listpattern"
-	DB_tbl_trx_listpatterndetail string = "tbl_trx_listpatterndetail"
+	DB_tbl_counter           string = "tbl_counter"
+	DB_tbl_admin             string = "tbl_admin"
+	DB_tbl_admingroup        string = "tbl_admingroup"
+	DB_tbl_mst_listpoint     string = "tbl_mst_listpoint"
+	DB_tbl_mst_listbet       string = "tbl_mst_listbet"
+	DB_tbl_mst_company_money string = "tbl_mst_company_money"
 
 	STATUS_NEW      string = "background:#0dcaf0;font-weight:bold;color:black;"
 	STATUS_RUNNING  string = "background:#FFEB3B;font-weight:bold;color:black;"

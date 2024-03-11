@@ -17,6 +17,46 @@ import (
 	"github.com/nleeper/goment"
 )
 
+func Fetch_listbet(idcompany string) (helpers.Response, error) {
+	var obj entities.Model_listbet
+	var arraobj []entities.Model_listbet
+	var res helpers.Response
+	msg := "Data Not Found"
+	con := db.CreateCon()
+	ctx := context.Background()
+	start := time.Now()
+
+	sql_select := ""
+	sql_select += "SELECT "
+	sql_select += "compmoney  "
+	sql_select += "FROM " + configs.DB_tbl_mst_company_money + " "
+	sql_select += "WHERE idcompany ='" + idcompany + "' "
+	sql_select += "ORDER BY compmoney ASC  "
+
+	row, err := con.QueryContext(ctx, sql_select)
+	helpers.ErrorCheck(err)
+	for row.Next() {
+		var (
+			compmoney_db int
+		)
+
+		err = row.Scan(&compmoney_db)
+
+		helpers.ErrorCheck(err)
+
+		obj.Money_bet = compmoney_db
+		arraobj = append(arraobj, obj)
+		msg = "Success"
+	}
+	defer row.Close()
+
+	res.Status = fiber.StatusOK
+	res.Message = msg
+	res.Record = arraobj
+	res.Time = time.Since(start).String()
+
+	return res, nil
+}
 func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) {
 	var obj entities.Model_invoiceclient
 	var arraobj []entities.Model_invoiceclient
@@ -43,7 +83,7 @@ func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) 
 	sql_select += "WHERE tgltransaksi >='" + tglbefore + "' "
 	sql_select += "AND tgltransaksi <='" + tglskrg + "' "
 	sql_select += "AND username_client ='" + username + "' "
-	sql_select += "ORDER BY idtransaksidetail DESC  LIMIT 60 "
+	sql_select += "ORDER BY tgltransaksi DESC  LIMIT 60 "
 
 	row, err := con.QueryContext(ctx, sql_select)
 	helpers.ErrorCheck(err)
@@ -196,6 +236,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 	if status == "OPEN" {
 		json := []byte(listdatabet)
 		jsonparser.ArrayEach(json, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			tipebet, _ := jsonparser.GetString(value, "tipebet")
 			nomor, _ := jsonparser.GetString(value, "nomor")
 			bet, _ := jsonparser.GetInt(value, "bet")
 			multiplier, _ := jsonparser.GetFloat(value, "multiplier")
@@ -203,13 +244,13 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			sql_insert := `
 				insert into
 				` + tbl_trx_transaksidetail + ` (
-					idtransaksidetail, idtransaksi , username_client, nomor, 
+					idtransaksidetail, idtransaksi , username_client, tipebet, nomor, 
 					bet, multiplier, status_transaksidetail, 
 					create_transaksidetail, createdate_transaksidetail  
 				) values (
-					$1, $2, $3, $4, 
-					$5, $6, $7,   
-					$8, $9     
+					$1, $2, $3, $4, $5,
+					$6, $7, $8,   
+					$9, $10      
 				)
 			`
 
@@ -217,7 +258,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			idrecord_counter := Get_counter(field_column)
 			idrecrod_value := tglnow.Format("YY") + tglnow.Format("MM") + tglnow.Format("DD") + tglnow.Format("HH") + strconv.Itoa(idrecord_counter)
 			flag_insert, msg_insert := Exec_SQL(sql_insert, tbl_trx_transaksidetail, "INSERT",
-				idrecrod_value, idtransaksi, username, nomor,
+				idrecrod_value, idtransaksi, username, tipebet, nomor,
 				bet, multiplier, "RUNNING",
 				"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"))
 

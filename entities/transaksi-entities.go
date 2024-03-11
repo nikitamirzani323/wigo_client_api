@@ -1,5 +1,8 @@
 package entities
 
+type Model_listbet struct {
+	Money_bet int `json:"money_bet"`
+}
 type Model_invoiceclient struct {
 	Invoiceclient_id         string  `json:"invoiceclient_id"`
 	Invoiceclient_date       string  `json:"invoiceclient_date"`
@@ -26,7 +29,9 @@ type Model_invoicedetail struct {
 	Invoicedetail_win    int    `json:"invoicedetail_win"`
 	Invoicedetail_status string `json:"invoicedetail_status"`
 }
-
+type Controller_default struct {
+	Company string `json:"company" validate:"required"`
+}
 type Controller_invoice struct {
 	Invoice_company  string `json:"invoice_company" validate:"required"`
 	Invoice_username string `json:"invoice_username" validate:"required"`

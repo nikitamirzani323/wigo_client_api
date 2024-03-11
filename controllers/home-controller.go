@@ -15,6 +15,14 @@ import (
 
 const invoice_client_redis = "CLIENT_LISTINVOICE"
 const invoice_result_redis = "CLIENT_RESULT"
+const listmoney_redis = "CLIENT_LISTMONEY"
+
+type c_tai struct {
+	Status  int         `json:"status"`
+	Message string      `json:"message"`
+	Record  interface{} `json:"record"`
+	Time    string      `json:"time"`
+}
 
 func CheckToken(c *fiber.Ctx) error {
 	var errors []*helpers.ErrorResponse
@@ -68,14 +76,56 @@ func CheckToken(c *fiber.Ctx) error {
 			})
 
 	} else {
-		return c.JSON(fiber.Map{
-			"status":            fiber.StatusOK,
-			"client_company":    "ajuna",
-			"client_name":       "developer",
-			"client_username":   "developer212",
-			"client_credit":     100000,
-			"engine_multiplier": 5,
+		var obj_record c_tai
+		var obj entities.Model_listbet
+		var arraobj []entities.Model_listbet
+		resultredis, flag := helpers.GetRedis(listmoney_redis + "_NUKE")
+		jsonredis := []byte(resultredis)
+		status_RD, _ := jsonparser.GetInt(jsonredis, "status")
+		message_RD, _ := jsonparser.GetString(jsonredis, "message")
+		record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
+		jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			money_bet, _ := jsonparser.GetInt(value, "money_bet")
+			obj.Money_bet = int(money_bet)
+			arraobj = append(arraobj, obj)
 		})
+		obj_record.Status = int(status_RD)
+		obj_record.Message = message_RD
+		obj_record.Record = arraobj
+		if !flag {
+			result, err := models.Fetch_listbet("NUKE")
+			if err != nil {
+				c.Status(fiber.StatusBadRequest)
+				return c.JSON(fiber.Map{
+					"status":  fiber.StatusBadRequest,
+					"message": err.Error(),
+					"record":  nil,
+				})
+			}
+			helpers.SetRedis(listmoney_redis+"_NUKE", result, 60*time.Minute)
+			fmt.Println("LISTBET DATABASE")
+			return c.JSON(fiber.Map{
+				"status":            fiber.StatusOK,
+				"client_company":    "NUKE",
+				"client_name":       "developer",
+				"client_username":   "developer",
+				"client_credit":     100000,
+				"client_listbet":    result,
+				"engine_multiplier": 5,
+			})
+		} else {
+			fmt.Println("LISTBET CACHE")
+			return c.JSON(fiber.Map{
+				"status":            fiber.StatusOK,
+				"client_company":    "NUKE",
+				"client_name":       "developer",
+				"client_username":   "developer",
+				"client_credit":     100000,
+				"client_listbet":    obj_record,
+				"engine_multiplier": 5,
+			})
+		}
+
 	}
 }
 
