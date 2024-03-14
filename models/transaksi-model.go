@@ -234,6 +234,13 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 
 	status = _GetInfo_Transaksi(tbl_trx_transaksi, idtransaksi)
 	if status == "OPEN" {
+		type Invoicedetail struct {
+			Nomor    string `json:"nomor"`
+			Totalbet int    `json:"totalbet"`
+			Totalwin int    `json:"totalwin"`
+		}
+		var objinvoice Invoicedetail
+		var arraobjinvoice []Invoicedetail
 		json := []byte(listdatabet)
 		jsonparser.ArrayEach(json, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			ipaddress, _ := jsonparser.GetString(value, "ipaddress")
@@ -288,8 +295,76 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			} else {
 				fmt.Println(msg_insert)
 			}
+			win := int(bet) + int(float32(bet)*float32(multiplier))
+			objinvoice.Nomor = nomor
+			objinvoice.Totalbet = int(bet)
+			objinvoice.Totalwin = int(win)
+			arraobjinvoice = append(arraobjinvoice, objinvoice)
 		})
 
+		keyredis := strings.ToLower(idcompany) + "_game_12d_" + idtransaksi
+		resultRD_invoice, flag_invoice := helpers.GetRedis(keyredis)
+		if !flag_invoice {
+			fmt.Println("INVOICE DATABASE")
+			helpers.SetRedis(keyredis, arraobjinvoice, 60*time.Minute)
+
+		} else {
+			fmt.Println("INVOICE CACHE")
+
+			var objinvoice_RD Invoicedetail
+			var arraobjinvoice_RD []Invoicedetail
+
+			jsonredis := []byte(resultRD_invoice)
+			record_RD, _, _, _ := jsonparser.Get(jsonredis)
+			jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+				nomorRD, _ := jsonparser.GetString(value, "nomor")
+				totalbetRD, _ := jsonparser.GetInt(value, "totalbet")
+				totalwinRD, _ := jsonparser.GetInt(value, "totalwin")
+
+				objinvoice_RD.Nomor = nomorRD
+				objinvoice_RD.Totalbet = int(totalbetRD)
+				objinvoice_RD.Totalwin = int(totalwinRD)
+				arraobjinvoice_RD = append(arraobjinvoice_RD, objinvoice_RD)
+
+			})
+
+			for i := 0; i < len(arraobjinvoice); i++ { // data diatas
+				nomor_loop := arraobjinvoice[i].Nomor
+				bet_loop := arraobjinvoice[i].Totalbet
+				win_loop := arraobjinvoice[i].Totalwin
+				flag_insert := true
+
+				jsonredis := []byte(resultRD_invoice)
+				record_RD, _, _, _ := jsonparser.Get(jsonredis)
+				jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+					nomorRD, _ := jsonparser.GetString(value, "nomor")
+					totalbetRD, _ := jsonparser.GetInt(value, "totalbet")
+					totalwinRD, _ := jsonparser.GetInt(value, "totalwin")
+
+					totalbet_temp := 0
+					totalwin_temp := 0
+
+					if nomor_loop == nomorRD {
+						totalbet_temp = bet_loop + int(totalbetRD)
+						totalwin_temp = win_loop + int(totalwinRD)
+						for j := 0; j < len(arraobjinvoice_RD); j++ {
+							if arraobjinvoice_RD[j].Nomor == nomor_loop {
+								arraobjinvoice_RD[j].Totalbet = totalbet_temp
+								arraobjinvoice_RD[j].Totalwin = totalwin_temp
+							}
+						}
+						flag_insert = false
+					}
+				})
+				if flag_insert {
+					objinvoice_RD.Nomor = nomor_loop
+					objinvoice_RD.Totalbet = int(bet_loop)
+					objinvoice_RD.Totalwin = int(win_loop)
+					arraobjinvoice_RD = append(arraobjinvoice_RD, objinvoice_RD)
+				}
+			}
+			helpers.SetRedis(keyredis, arraobjinvoice_RD, 60*time.Minute)
+		}
 	}
 
 	res.Status = fiber.StatusOK
