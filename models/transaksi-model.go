@@ -236,6 +236,9 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 	if status == "OPEN" {
 		json := []byte(listdatabet)
 		jsonparser.ArrayEach(json, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			ipaddress, _ := jsonparser.GetString(value, "ipaddress")
+			mobile, _ := jsonparser.GetString(value, "mobile")
+			device, _ := jsonparser.GetString(value, "device")
 			tipebet, _ := jsonparser.GetString(value, "tipebet")
 			nomor, _ := jsonparser.GetString(value, "nomor")
 			bet, _ := jsonparser.GetInt(value, "bet")
@@ -244,13 +247,13 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			sql_insert := `
 				insert into
 				` + tbl_trx_transaksidetail + ` (
-					idtransaksidetail, idtransaksi , username_client, tipebet, nomor, 
+					idtransaksidetail, idtransaksi , username_client, ipaddress_client, browser_client, device_client, tipebet, nomor, 
 					bet, multiplier, status_transaksidetail, 
 					create_transaksidetail, createdate_transaksidetail  
 				) values (
-					$1, $2, $3, $4, $5,
-					$6, $7, $8,   
-					$9, $10      
+					$1, $2, $3, $4, $5, $6, $7, $8, 
+					$9, $10, $11,   
+					$12, $13      
 				)
 			`
 
@@ -258,7 +261,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			idrecord_counter := Get_counter(field_column)
 			idrecrod_value := tglnow.Format("YY") + tglnow.Format("MM") + tglnow.Format("DD") + tglnow.Format("HH") + strconv.Itoa(idrecord_counter)
 			flag_insert, msg_insert := Exec_SQL(sql_insert, tbl_trx_transaksidetail, "INSERT",
-				idrecrod_value, idtransaksi, username, tipebet, nomor,
+				idrecrod_value, idtransaksi, username, ipaddress, mobile, device, tipebet, nomor,
 				bet, multiplier, "RUNNING",
 				"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"))
 
@@ -266,12 +269,12 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				msg = "Succes"
 
 				sql_update := `
-				UPDATE 
-				` + tbl_trx_transaksi + `  
-				SET total_bet=$1,
-				update_transaksi=$2, updatedate_transaksi=$3          
-				WHERE idtransaksi=$4         
-			`
+					UPDATE 
+					` + tbl_trx_transaksi + `  
+					SET total_bet=$1,
+					update_transaksi=$2, updatedate_transaksi=$3          
+					WHERE idtransaksi=$4         
+				`
 
 				flag_update, msg_update := Exec_SQL(sql_update, tbl_trx_transaksi, "UPDATE",
 					_GetTotalBet_Transaksi(tbl_trx_transaksidetail, idtransaksi),
@@ -336,27 +339,6 @@ func _GetInfo_Transaksi(table, idtransaksi string) string {
 	}
 
 	return status
-}
-func _GetInfo_Company(idcompany string) string {
-	con := db.CreateCon()
-	ctx := context.Background()
-	idcurr := ""
-
-	sql_select := ""
-	sql_select += "SELECT "
-	sql_select += "idcurr "
-	sql_select += "FROM " + configs.DB_tbl_mst_company + " "
-	sql_select += "WHERE idcompany='" + idcompany + "'   "
-
-	row := con.QueryRowContext(ctx, sql_select)
-	switch e := row.Scan(&idcurr); e {
-	case sql.ErrNoRows:
-	case nil:
-	default:
-		helpers.ErrorCheck(e)
-	}
-
-	return idcurr
 }
 func GetInfo_CompanyConf(idcompany string) (float64, float64, float64, string, string) {
 	con := db.CreateCon()
