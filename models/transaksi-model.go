@@ -77,7 +77,7 @@ func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) 
 	sql_select := ""
 	sql_select += "SELECT "
 	sql_select += "idtransaksi, to_char(COALESCE(tgltransaksi,now()), 'YYYY-MM-DD HH24:MI:SS') as tgltransaksi,  "
-	sql_select += "username_client, resultwigo, nomor,   "
+	sql_select += "username_client, resultwigo, nomor, tipebet,  "
 	sql_select += "bet, win, multiplier, status_transaksidetail    "
 	sql_select += "FROM " + view_invoice_client + " "
 	sql_select += "WHERE tgltransaksi >='" + tglbefore + "' "
@@ -89,14 +89,14 @@ func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) 
 	helpers.ErrorCheck(err)
 	for row.Next() {
 		var (
-			idtransaksi_db, tgltransaksi_db                        string
-			username_client_db, resultwigo_db, nomor_db, status_db string
-			bet_db, win_db                                         int
-			multiplier_db                                          float64
+			idtransaksi_db, tgltransaksi_db                                    string
+			username_client_db, resultwigo_db, nomor_db, tipebet_db, status_db string
+			bet_db, win_db                                                     int
+			multiplier_db                                                      float64
 		)
 
 		err = row.Scan(&idtransaksi_db, &tgltransaksi_db,
-			&username_client_db, &resultwigo_db, &nomor_db,
+			&username_client_db, &resultwigo_db, &nomor_db, &tipebet_db,
 			&bet_db, &win_db, &multiplier_db, &status_db)
 
 		helpers.ErrorCheck(err)
@@ -110,6 +110,7 @@ func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) 
 		obj.Invoiceclient_result = resultwigo_db
 		obj.Invoiceclient_username = username_client_db
 		obj.Invoiceclient_nomor = nomor_db
+		obj.Invoiceclient_tipebet = tipebet_db
 		obj.Invoiceclient_bet = bet_db
 		obj.Invoiceclient_win = win_db
 		obj.Invoiceclient_multiplier = multiplier_db

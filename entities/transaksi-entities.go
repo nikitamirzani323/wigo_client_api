@@ -9,6 +9,7 @@ type Model_invoiceclient struct {
 	Invoiceclient_result     string  `json:"invoiceclient_result"`
 	Invoiceclient_username   string  `json:"invoiceclient_username"`
 	Invoiceclient_nomor      string  `json:"invoiceclient_nomor"`
+	Invoiceclient_tipebet    string  `json:"invoiceclient_tipebet"`
 	Invoiceclient_bet        int     `json:"invoiceclient_bet"`
 	Invoiceclient_win        int     `json:"invoiceclient_win"`
 	Invoiceclient_multiplier float64 `json:"invoiceclient_multiplier"`

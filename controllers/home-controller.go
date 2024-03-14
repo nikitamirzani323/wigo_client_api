@@ -218,6 +218,7 @@ func ListInvoiceclient(c *fiber.Ctx) error {
 		invoiceclient_result, _ := jsonparser.GetString(value, "invoiceclient_result")
 		invoiceclient_username, _ := jsonparser.GetString(value, "invoiceclient_username")
 		invoiceclient_nomor, _ := jsonparser.GetString(value, "invoiceclient_nomor")
+		invoiceclient_tipebet, _ := jsonparser.GetString(value, "invoiceclient_tipebet")
 		invoiceclient_bet, _ := jsonparser.GetInt(value, "invoiceclient_bet")
 		invoiceclient_win, _ := jsonparser.GetInt(value, "invoiceclient_win")
 		invoiceclient_multiplier, _ := jsonparser.GetFloat(value, "invoiceclient_multiplier")
@@ -229,6 +230,7 @@ func ListInvoiceclient(c *fiber.Ctx) error {
 		obj.Invoiceclient_result = invoiceclient_result
 		obj.Invoiceclient_username = invoiceclient_username
 		obj.Invoiceclient_nomor = invoiceclient_nomor
+		obj.Invoiceclient_tipebet = invoiceclient_tipebet
 		obj.Invoiceclient_bet = int(invoiceclient_bet)
 		obj.Invoiceclient_win = int(invoiceclient_win)
 		obj.Invoiceclient_multiplier = float64(invoiceclient_multiplier)
