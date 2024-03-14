@@ -240,6 +240,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			Totaltransaksi int         `json:"totaltransaksi"`
 		}
 		type Invoicedetaillistbet struct {
+			Client_id         string  `json:"client_id"`
 			Client_username   string  `json:"client_username"`
 			Client_tipebet    string  `json:"client_tipebet"`
 			Client_nomor      string  `json:"client_nomor"`
@@ -253,7 +254,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			Totalbet     int    `json:"totalbet"`
 			Totalwin     int    `json:"totalwin"`
 		}
-		totalinvoice := 0
+
 		totalbet := 0
 		var objinvoice_parent Invoicedetail
 		// var arraobjinvoice_parent []Invoicedetail
@@ -316,7 +317,9 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				fmt.Println(msg_insert)
 			}
 			totalbet = totalbet + int(bet)
+
 			//LIST DETAIL
+			objinvoice_listdetail.Client_id = idrecrod_value
 			objinvoice_listdetail.Client_username = username
 			objinvoice_listdetail.Client_tipebet = tipebet
 			objinvoice_listdetail.Client_nomor = nomor
@@ -327,12 +330,12 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 
 			//SUMARY
 			win := int(bet) + int(float32(bet)*float32(multiplier))
-			totalinvoice = totalinvoice + 1
 			objinvoice_sumary.Nomor = nomor
 			objinvoice_sumary.Totalbet = int(bet)
 			objinvoice_sumary.Totalwin = int(win)
-			objinvoice_sumary.Totalinvoice = totalinvoice
+			objinvoice_sumary.Totalinvoice = 1
 			arraobjinvoice_sumary = append(arraobjinvoice_sumary, objinvoice_sumary)
+
 		})
 
 		keyredis := strings.ToLower(idcompany) + "_game_12d_" + idtransaksi
@@ -373,6 +376,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 
 			})
 			jsonparser.ArrayEach(recordlistbet_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+				client_id, _ := jsonparser.GetString(value, "client_id")
 				client_username, _ := jsonparser.GetString(value, "client_username")
 				client_tipebet, _ := jsonparser.GetString(value, "client_tipebet")
 				client_nomor, _ := jsonparser.GetString(value, "client_nomor")
@@ -380,6 +384,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				client_multiplier, _ := jsonparser.GetFloat(value, "client_multiplier")
 				client_status, _ := jsonparser.GetString(value, "client_status")
 
+				objinvoice_listdetail_RD.Client_id = client_id
 				objinvoice_listdetail_RD.Client_username = client_username
 				objinvoice_listdetail_RD.Client_tipebet = client_tipebet
 				objinvoice_listdetail_RD.Client_nomor = client_nomor
@@ -391,6 +396,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			})
 
 			for i := 0; i < len(arraobjinvoice_listdetail); i++ { // data diatas listdetailbet
+				client_id := arraobjinvoice_listdetail[i].Client_id
 				client_username := arraobjinvoice_listdetail[i].Client_username
 				client_tipebet := arraobjinvoice_listdetail[i].Client_tipebet
 				client_nomor := arraobjinvoice_listdetail[i].Client_nomor
@@ -398,6 +404,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				client_multiplier := arraobjinvoice_listdetail[i].Client_multiplier
 				client_status := arraobjinvoice_listdetail[i].Client_status
 
+				objinvoice_listdetail_RD.Client_id = client_id
 				objinvoice_listdetail_RD.Client_username = client_username
 				objinvoice_listdetail_RD.Client_tipebet = client_tipebet
 				objinvoice_listdetail_RD.Client_nomor = client_nomor
@@ -405,7 +412,6 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				objinvoice_listdetail_RD.Client_multiplier = client_multiplier
 				objinvoice_listdetail_RD.Client_status = client_status
 				arraobjinvoice_listdetail_RD = append(arraobjinvoice_listdetail_RD, objinvoice_listdetail_RD)
-
 			}
 
 			for i := 0; i < len(arraobjinvoice_sumary); i++ { // data diatas
@@ -415,18 +421,18 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				win_loop := arraobjinvoice_sumary[i].Totalwin
 				flag_insert := true
 
-				recordsummary_RD, _, _, _ := jsonparser.Get(jsonredis, "summary")
 				jsonparser.ArrayEach(recordsummary_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 					nomorRD, _ := jsonparser.GetString(value, "nomor")
 					totalinvoiceRD, _ := jsonparser.GetInt(value, "totalinvoice")
 					totalbetRD, _ := jsonparser.GetInt(value, "totalbet")
 					totalwinRD, _ := jsonparser.GetInt(value, "totalwin")
 
+					totalinvoice_temp := 0
 					totalbet_temp := 0
 					totalwin_temp := 0
 
 					if nomor_loop == nomorRD {
-						totalinvoice_temp := int(totalinvoiceRD) + 1
+						totalinvoice_temp = int(totalinvoiceRD) + invoice_loop
 						totalbet_temp = bet_loop + int(totalbetRD)
 						totalwin_temp = win_loop + int(totalwinRD)
 						for j := 0; j < len(arraobjinvoice_sumary_RD); j++ {
