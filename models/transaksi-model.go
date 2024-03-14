@@ -234,13 +234,25 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 
 	status = _GetInfo_Transaksi(tbl_trx_transaksi, idtransaksi)
 	if status == "OPEN" {
-		type Invoicedetail struct {
+		// type Invoicedetail struct {
+		// 	Listbet interface{} `json:"listbet"`
+		// 	Summary interface{} `json:"summary"`
+		// }
+		// type Invoicedetaillistbet struct {
+		// 	Client_username   string  `json:"client_username"`
+		// 	Client_tipebet    string  `json:"client_tipebet"`
+		// 	Client_nomor      string  `json:"client_nomor"`
+		// 	Client_bet        int     `json:"client_bet"`
+		// 	Client_multiplier float32 `json:"client_multiplier"`
+		// 	Client_status     float32 `json:"client_status"`
+		// }
+		type Invoicesumarynomor struct {
 			Nomor    string `json:"nomor"`
 			Totalbet int    `json:"totalbet"`
 			Totalwin int    `json:"totalwin"`
 		}
-		var objinvoice Invoicedetail
-		var arraobjinvoice []Invoicedetail
+		var objinvoice_sumary Invoicesumarynomor
+		var arraobjinvoice_sumary []Invoicesumarynomor
 		json := []byte(listdatabet)
 		jsonparser.ArrayEach(json, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			ipaddress, _ := jsonparser.GetString(value, "ipaddress")
@@ -296,23 +308,23 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				fmt.Println(msg_insert)
 			}
 			win := int(bet) + int(float32(bet)*float32(multiplier))
-			objinvoice.Nomor = nomor
-			objinvoice.Totalbet = int(bet)
-			objinvoice.Totalwin = int(win)
-			arraobjinvoice = append(arraobjinvoice, objinvoice)
+			objinvoice_sumary.Nomor = nomor
+			objinvoice_sumary.Totalbet = int(bet)
+			objinvoice_sumary.Totalwin = int(win)
+			arraobjinvoice_sumary = append(arraobjinvoice_sumary, objinvoice_sumary)
 		})
 
 		keyredis := strings.ToLower(idcompany) + "_game_12d_" + idtransaksi
 		resultRD_invoice, flag_invoice := helpers.GetRedis(keyredis)
 		if !flag_invoice {
 			fmt.Println("INVOICE DATABASE")
-			helpers.SetRedis(keyredis, arraobjinvoice, 60*time.Minute)
+			helpers.SetRedis(keyredis, arraobjinvoice_sumary, 60*time.Minute)
 
 		} else {
 			fmt.Println("INVOICE CACHE")
 
-			var objinvoice_RD Invoicedetail
-			var arraobjinvoice_RD []Invoicedetail
+			var objinvoice_RD Invoicesumarynomor
+			var arraobjinvoice_RD []Invoicesumarynomor
 
 			jsonredis := []byte(resultRD_invoice)
 			record_RD, _, _, _ := jsonparser.Get(jsonredis)
@@ -328,10 +340,10 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 
 			})
 
-			for i := 0; i < len(arraobjinvoice); i++ { // data diatas
-				nomor_loop := arraobjinvoice[i].Nomor
-				bet_loop := arraobjinvoice[i].Totalbet
-				win_loop := arraobjinvoice[i].Totalwin
+			for i := 0; i < len(arraobjinvoice_sumary); i++ { // data diatas
+				nomor_loop := arraobjinvoice_sumary[i].Nomor
+				bet_loop := arraobjinvoice_sumary[i].Totalbet
+				win_loop := arraobjinvoice_sumary[i].Totalwin
 				flag_insert := true
 
 				jsonredis := []byte(resultRD_invoice)
