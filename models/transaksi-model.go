@@ -183,47 +183,6 @@ func Fetch_result(idcompany string) (helpers.Response, error) {
 
 	return res, nil
 }
-func Save_transaksi(idcompany, idcurr string) (helpers.Responsetransaksi, error) {
-	var res helpers.Responsetransaksi
-	msg := "Failed"
-	tglnow, _ := goment.New()
-	render_page := time.Now()
-
-	_, tbl_trx_transaksi, _, _ := Get_mappingdatabase(idcompany)
-	sql_insert := `
-			insert into
-			` + tbl_trx_transaksi + ` (
-				idtransaksi , idcurr, idcompany, datetransaksi,
-				create_transaksi, createdate_transaksi 
-			) values (
-				$1, $2, $3, $4, 
-				$5, $6 
-			)
-		`
-
-	field_column := tbl_trx_transaksi + tglnow.Format("YYYY") + tglnow.Format("MM")
-	idrecord_counter := Get_counter(field_column)
-	idrecrodparent_value := strings.ToUpper(idcompany) + "-" + tglnow.Format("YY") + tglnow.Format("MM") + tglnow.Format("DD") + tglnow.Format("HH") + strconv.Itoa(idrecord_counter)
-	date_transaksi := tglnow.Format("YYYY-MM-DD HH:mm:ss")
-
-	flag_insert, msg_insert := Exec_SQL(sql_insert, tbl_trx_transaksi, "INSERT",
-		idrecrodparent_value, idcurr, idcompany, date_transaksi,
-		"SYSTEM", date_transaksi)
-
-	if flag_insert {
-		msg = "Succes"
-
-	} else {
-		fmt.Println(msg_insert)
-	}
-
-	res.Status = fiber.StatusOK
-	res.Message = msg
-	res.Idtransaksi = idrecrodparent_value
-	res.Time = time.Since(render_page).String()
-
-	return res, nil
-}
 func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, total_bet int) (helpers.Response, error) {
 	var res helpers.Response
 	msg := "Failed"
@@ -295,7 +254,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"))
 
 			if flag_insert {
-				msg = "Succes"
+				msg = "Success"
 
 				sql_update := `
 					UPDATE 
@@ -310,7 +269,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 					"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"), idtransaksi)
 
 				if flag_update {
-					msg = "Succes"
+					msg = "Success"
 				} else {
 					fmt.Println(msg_update)
 				}
