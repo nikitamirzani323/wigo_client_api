@@ -259,13 +259,14 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				sql_update := `
 					UPDATE 
 					` + tbl_trx_transaksi + `  
-					SET total_bet=$1,
-					update_transaksi=$2, updatedate_transaksi=$3          
-					WHERE idtransaksi=$4         
+					SET total_bet=$1, total_member=$2, 
+					update_transaksi=$3, updatedate_transaksi=$4           
+					WHERE idtransaksi=$5          
 				`
 
 				flag_update, msg_update := Exec_SQL(sql_update, tbl_trx_transaksi, "UPDATE",
 					_GetTotalBet_Transaksi(tbl_trx_transaksidetail, idtransaksi),
+					_GetTotalMember_Transaksi(tbl_trx_transaksidetail, idtransaksi),
 					"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"), idtransaksi)
 
 				if flag_update {
@@ -449,6 +450,27 @@ func _GetTotalBet_Transaksi(table, idtransaksi string) int {
 	}
 
 	return total_bet
+}
+func _GetTotalMember_Transaksi(table, idtransaksi string) int {
+	con := db.CreateCon()
+	ctx := context.Background()
+	total_member := 0
+	sql_select := ""
+	sql_select += "SELECT "
+	sql_select += "count(distinct(username_client)) as totalmember "
+	sql_select += "FROM " + table + " "
+	sql_select += "WHERE idtransaksi='" + idtransaksi + "'   "
+	sql_select += "group by username_client "
+
+	row := con.QueryRowContext(ctx, sql_select)
+	switch e := row.Scan(&total_member); e {
+	case sql.ErrNoRows:
+	case nil:
+	default:
+		helpers.ErrorCheck(e)
+	}
+
+	return total_member
 }
 func _GetInfo_Transaksi(table, idtransaksi string) string {
 	con := db.CreateCon()
