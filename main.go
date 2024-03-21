@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"bitbucket.org/isbtotogroup/wigo_client_api/db"
+	"bitbucket.org/isbtotogroup/wigo_client_api/helpers"
+	"bitbucket.org/isbtotogroup/wigo_client_api/routers"
 	"github.com/joho/godotenv"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/db"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/helpers"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/routers"
 )
 
 func main() {

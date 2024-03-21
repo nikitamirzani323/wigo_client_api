@@ -1,4 +1,4 @@
-module github.com/nikitamirzani323/BTANGKAS_CLIENT_API
+module bitbucket.org/isbtotogroup/wigo_client_api
 
 go 1.17
 

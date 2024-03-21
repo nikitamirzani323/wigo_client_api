@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"bitbucket.org/isbtotogroup/wigo_client_api/configs"
+	"bitbucket.org/isbtotogroup/wigo_client_api/db"
+	"bitbucket.org/isbtotogroup/wigo_client_api/entities"
+	"bitbucket.org/isbtotogroup/wigo_client_api/helpers"
 	"github.com/buger/jsonparser"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/configs"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/db"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/entities"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/helpers"
 	"github.com/nleeper/goment"
 )
 

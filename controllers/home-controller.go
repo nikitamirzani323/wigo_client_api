@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"bitbucket.org/isbtotogroup/wigo_client_api/entities"
+	"bitbucket.org/isbtotogroup/wigo_client_api/helpers"
+	"bitbucket.org/isbtotogroup/wigo_client_api/models"
 	"github.com/buger/jsonparser"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/entities"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/helpers"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/models"
 )
 
 const invoice_client_redis = "CLIENT_LISTINVOICE"

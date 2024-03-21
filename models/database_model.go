@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/configs"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/db"
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/helpers"
+	"bitbucket.org/isbtotogroup/wigo_client_api/configs"
+	"bitbucket.org/isbtotogroup/wigo_client_api/db"
+	"bitbucket.org/isbtotogroup/wigo_client_api/helpers"
 )
 
 func Get_counter(field_column string) int {

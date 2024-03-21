@@ -9,7 +9,7 @@ import (
 	s "strings"
 	"time"
 
-	"github.com/nikitamirzani323/BTANGKAS_CLIENT_API/configs"
+	"bitbucket.org/isbtotogroup/wigo_client_api/configs"
 	"golang.org/x/crypto/bcrypt"
 )
 
