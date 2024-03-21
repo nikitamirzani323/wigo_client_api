@@ -71,8 +71,6 @@ func Fetch_invoice_client(idcompany, username string) (helpers.Response, error) 
 	tglnow, _ := goment.New()
 	tglskrg := tglnow.Format("YYYY-MM-DD HH:mm:ss")
 	tglbefore := tglnow.Add(-31, "days").Format("YYYY-MM-DD HH:mm:ss")
-	fmt.Println("tgl skrg :" + tglskrg)
-	fmt.Println("tgl before :" + tglbefore)
 
 	sql_select := ""
 	sql_select += "SELECT "
@@ -190,10 +188,20 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 	render_page := time.Now()
 	status := "CLOSED"
 
+	dayendmonth := helpers.GetEndRangeDate(tglnow.Format("MM"))
+	tglstart := tglnow.Format("YYYY-MM-") + "01 00:00:00"
+	tglend := tglnow.Format("YYYY-MM-") + dayendmonth + " 23:59:59"
+	fmt.Println("tgl start :" + tglstart)
+	fmt.Println("tgl end :" + tglend)
+
 	_, tbl_trx_transaksi, tbl_trx_transaksidetail, _ := Get_mappingdatabase(idcompany)
 
 	status = _GetInfo_Transaksi(tbl_trx_transaksi, idtransaksi)
 	if status == "OPEN" {
+		type Invoicemonth struct {
+			Totalbet int `json:"totalbet"`
+			Totalwin int `json:"totalwin"`
+		}
 		type Invoicedetail struct {
 			Listbet        interface{} `json:"listbet"`
 			Summary        interface{} `json:"summary"`
@@ -216,6 +224,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 		}
 
 		totalbet := 0
+		var objinvoicemonth Invoicemonth
 		var objinvoice_parent Invoicedetail
 		// var arraobjinvoice_parent []Invoicedetail
 		var objinvoice_listdetail Invoicedetaillistbet
@@ -298,9 +307,13 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			arraobjinvoice_sumary = append(arraobjinvoice_sumary, objinvoice_sumary)
 
 		})
+		tglstart_redis := tglnow.Format("YYYYMM") + "01000000"
+		tglend_redis := tglnow.Format("YYYYMM") + dayendmonth + "235959"
 
+		keyredis_invoicemonth := strings.ToLower(idcompany) + "_game_12d_" + tglstart_redis + tglend_redis
 		keyredis := strings.ToLower(idcompany) + "_game_12d_" + idtransaksi
 		resultRD_invoice, flag_invoice := helpers.GetRedis(keyredis)
+		resultRD_invoicemonth, flag_invoicemonth := helpers.GetRedis(keyredis_invoicemonth)
 		if !flag_invoice {
 			fmt.Println("INVOICE DATABASE")
 
@@ -309,7 +322,6 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			objinvoice_parent.Totaltransaksi = totalbet
 
 			helpers.SetRedis(keyredis, objinvoice_parent, 60*time.Minute)
-
 		} else {
 			fmt.Println("INVOICE CACHE")
 
@@ -422,6 +434,28 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 
 			helpers.SetRedis(keyredis, objinvoice_parent_RD, 60*time.Minute)
 		}
+
+		if !flag_invoicemonth {
+			fmt.Println("INVOICE MONTH DATABASE")
+			totalbet_DB, totalwin_DB := _GetTotalBet_ByDate(tbl_trx_transaksi, tglstart, tglend)
+
+			objinvoicemonth.Totalbet = totalbet_DB
+			objinvoicemonth.Totalwin = totalwin_DB
+
+			helpers.SetRedis(keyredis_invoicemonth, objinvoicemonth, 0)
+		} else {
+			fmt.Println("INVOICE MONTH CACHE")
+			jsonredis := []byte(resultRD_invoicemonth)
+			totalbet_RD, _ := jsonparser.GetInt(jsonredis, "totalbet")
+			totalwin_RD, _ := jsonparser.GetInt(jsonredis, "totalwin")
+
+			totalbetnew_month := totalbet + int(totalbet_RD)
+
+			objinvoicemonth.Totalbet = totalbetnew_month
+			objinvoicemonth.Totalwin = int(totalwin_RD)
+
+			helpers.SetRedis(keyredis_invoicemonth, objinvoicemonth, 0)
+		}
 	}
 
 	res.Status = fiber.StatusOK
@@ -430,6 +464,28 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 	res.Time = time.Since(render_page).String()
 
 	return res, nil
+}
+func _GetTotalBet_ByDate(table, startdate, enddate string) (int, int) {
+	con := db.CreateCon()
+	ctx := context.Background()
+	totalbet := 0
+	totalwin := 0
+	sql_select := ""
+	sql_select += "SELECT "
+	sql_select += "COALESCE(SUM(total_bet),0) AS totalbet,  COALESCE(sum(total_win),0) as totalwin "
+	sql_select += "FROM " + table + " "
+	sql_select += "WHERE createdate_transaksi >='" + startdate + "'   "
+	sql_select += "AND createdate_transaksi <='" + enddate + "'   "
+
+	row := con.QueryRowContext(ctx, sql_select)
+	switch e := row.Scan(&totalbet, &totalwin); e {
+	case sql.ErrNoRows:
+	case nil:
+	default:
+		helpers.ErrorCheck(e)
+	}
+
+	return totalbet, totalwin
 }
 func _GetTotalBet_Transaksi(table, idtransaksi string) int {
 	con := db.CreateCon()
