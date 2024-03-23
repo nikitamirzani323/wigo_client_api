@@ -48,7 +48,6 @@ func Init() *fiber.App {
 	app.Post("/api/listinvoice", controllers.ListInvoiceclient)
 	app.Post("/api/listresult", controllers.ListResult)
 	app.Post("/api/savetransaksidetail", controllers.TransaksidetailSave)
-	// app.Post("/api/savetransaksi", controllers.TransaksiSave)
 
 	return app
 }
