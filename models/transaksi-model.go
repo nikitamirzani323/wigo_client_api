@@ -310,8 +310,8 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 		tglstart_redis := tglnow.Format("YYYYMM") + "01000000"
 		tglend_redis := tglnow.Format("YYYYMM") + dayendmonth + "235959"
 
-		keyredis_invoicemonth := strings.ToLower(idcompany) + "_game_12d_" + tglstart_redis + tglend_redis
-		keyredis := strings.ToLower(idcompany) + "_game_12d_" + idtransaksi
+		keyredis_invoicemonth := strings.ToLower(idcompany) + ":12D30S:invoicemonth_" + tglstart_redis + tglend_redis
+		keyredis := strings.ToLower(idcompany) + ":12D30S:invoice_" + idtransaksi
 		resultRD_invoice, flag_invoice := helpers.GetRedis(keyredis)
 		resultRD_invoicemonth, flag_invoicemonth := helpers.GetRedis(keyredis_invoicemonth)
 		if !flag_invoice {

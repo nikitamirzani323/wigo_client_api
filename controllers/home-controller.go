@@ -13,9 +13,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const invoice_client_redis = "CLIENT_LISTINVOICE"
-const invoice_result_redis = "CLIENT_RESULT"
-const listmoney_redis = "CLIENT_LISTMONEY"
+const invoice_client_redis = "CLIENT:LISTINVOICE"
+const invoice_result_redis = "CLIENT:RESULT"
+const listmoney_redis = "CLIENT:LISTMONEY"
 
 type c_tai struct {
 	Status  int         `json:"status"`
@@ -79,7 +79,7 @@ func CheckToken(c *fiber.Ctx) error {
 		var obj_record c_tai
 		var obj entities.Model_listbet
 		var arraobj []entities.Model_listbet
-		resultredis, flag := helpers.GetRedis(listmoney_redis + "_NUKE")
+		resultredis, flag := helpers.GetRedis("nuke:" + listmoney_redis)
 		jsonredis := []byte(resultredis)
 		status_RD, _ := jsonparser.GetInt(jsonredis, "status")
 		message_RD, _ := jsonparser.GetString(jsonredis, "message")
@@ -209,7 +209,7 @@ func ListInvoiceclient(c *fiber.Ctx) error {
 	var obj entities.Model_invoiceclient
 	var arraobj []entities.Model_invoiceclient
 	render_page := time.Now()
-	resultredis, flag := helpers.GetRedis(invoice_client_redis + "_" + strings.ToLower(client.Invoice_company) + "_" + strings.ToLower(client.Invoice_username))
+	resultredis, flag := helpers.GetRedis(strings.ToLower(client.Invoice_company) + ":" + invoice_client_redis + "_" + strings.ToLower(client.Invoice_username))
 	jsonredis := []byte(resultredis)
 	record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
 	jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -249,7 +249,7 @@ func ListInvoiceclient(c *fiber.Ctx) error {
 				"record":  nil,
 			})
 		}
-		helpers.SetRedis(invoice_client_redis+"_"+strings.ToLower(client.Invoice_company)+"_"+strings.ToLower(client.Invoice_username), result, 5*time.Minute)
+		helpers.SetRedis(strings.ToLower(client.Invoice_company)+":"+invoice_client_redis+"_"+strings.ToLower(client.Invoice_username), result, 5*time.Minute)
 		fmt.Printf("INVOICECLIENT DATABASE %s-%s\n", client.Invoice_company, client.Invoice_username)
 		return c.JSON(result)
 	} else {
@@ -294,7 +294,7 @@ func ListResult(c *fiber.Ctx) error {
 	var obj entities.Model_result
 	var arraobj []entities.Model_result
 	render_page := time.Now()
-	resultredis, flag := helpers.GetRedis(invoice_result_redis + "_" + strings.ToLower(client.Invoice_company))
+	resultredis, flag := helpers.GetRedis(strings.ToLower(client.Invoice_company) + ":" + invoice_result_redis)
 	jsonredis := []byte(resultredis)
 	record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
 	jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -318,7 +318,7 @@ func ListResult(c *fiber.Ctx) error {
 				"record":  nil,
 			})
 		}
-		helpers.SetRedis(invoice_result_redis+"_"+strings.ToLower(client.Invoice_company), result, 30*time.Minute)
+		helpers.SetRedis(strings.ToLower(client.Invoice_company)+":"+invoice_result_redis, result, 30*time.Minute)
 		fmt.Printf("RESULT DATABASE %s\n", client.Invoice_company)
 		return c.JSON(result)
 	} else {
@@ -383,10 +383,10 @@ func TransaksidetailSave(c *fiber.Ctx) error {
 }
 
 func _deleteredis_wigo(company, username string) {
-	val_invoice := helpers.DeleteRedis(invoice_client_redis + "_" + strings.ToLower(company) + "_" + strings.ToLower(username))
+	val_invoice := helpers.DeleteRedis(strings.ToLower(company) + ":" + invoice_client_redis + "_" + strings.ToLower(username))
 	fmt.Printf("Redis Delete INVOICE CLIENT : %d - %s %s\n", val_invoice, company, username)
 
-	val_result := helpers.DeleteRedis(invoice_result_redis + "_" + strings.ToLower(company))
+	val_result := helpers.DeleteRedis(strings.ToLower(company) + ":" + invoice_result_redis)
 	fmt.Printf("Redis Delete RESULT : %d - %s %s\n", val_result, company, username)
 
 }
