@@ -52,8 +52,6 @@ func CheckToken(c *fiber.Ctx) error {
 		})
 	}
 
-	// result, ruleadmin, err := models.Login_Model(client.Username, client.Password, client.Ipaddress)
-
 	if err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
@@ -64,7 +62,28 @@ func CheckToken(c *fiber.Ctx) error {
 	}
 
 	result := false
-	if client.Token == "qC5YmBvXzabGp34jJlKvnC6wCrr3pLCwBzsLoSzl4k=" {
+	client_company := ""
+	client_username := ""
+	client_name := ""
+	client_credit := 0
+	switch client.Token {
+	case "qC5YmBvXzabGp34jJlKvnC6wCrr3pLCwBzsLoSzl4k=":
+		client_company = "NUKE"
+		client_username = "developer"
+		client_name = "developer"
+		client_credit = 100000
+		result = true
+	case "12345BvXzabGp34jJlKvnC6wCrr3pLCwBzsLoSzl4k=":
+		client_company = "NUKE"
+		client_username = "developer12"
+		client_name = "developer12"
+		client_credit = 500000
+		result = true
+	case "12345BvXzabGp34jJlKvnC6wCrr3pLCwBzsL1234567":
+		client_company = "NUKE"
+		client_username = "developer55"
+		client_name = "developer55"
+		client_credit = 1000000
 		result = true
 	}
 
@@ -146,10 +165,10 @@ func CheckToken(c *fiber.Ctx) error {
 			fmt.Println("LISTBET DATABASE")
 			return c.JSON(fiber.Map{
 				"status":                          fiber.StatusOK,
-				"client_company":                  "NUKE",
-				"client_name":                     "developer",
-				"client_username":                 "developer",
-				"client_credit":                   100000,
+				"client_company":                  client_company,
+				"client_name":                     client_name,
+				"client_username":                 client_username,
+				"client_credit":                   client_credit,
 				"client_listbet":                  result,
 				"engine_multiplier_angka":         engine_win_angka,
 				"engine_multiplier_redblack":      engine_win_redblack,
@@ -161,10 +180,10 @@ func CheckToken(c *fiber.Ctx) error {
 			fmt.Println("LISTBET CACHE")
 			return c.JSON(fiber.Map{
 				"status":                          fiber.StatusOK,
-				"client_company":                  "NUKE",
-				"client_name":                     "developer",
-				"client_username":                 "developer",
-				"client_credit":                   100000,
+				"client_company":                  client_company,
+				"client_name":                     client_name,
+				"client_username":                 client_username,
+				"client_credit":                   client_credit,
 				"client_listbet":                  obj_record,
 				"engine_multiplier_angka":         engine_win_angka,
 				"engine_multiplier_redblack":      engine_win_redblack,
