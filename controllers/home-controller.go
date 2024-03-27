@@ -16,12 +16,18 @@ import (
 const invoice_client_redis = "CLIENT:LISTINVOICE"
 const invoice_result_redis = "CLIENT:RESULT"
 const listmoney_redis = "CLIENT:LISTMONEY"
+const fieldlogin_redis = "CLIENT_LOGIN"
 
 type c_tai struct {
 	Status  int         `json:"status"`
 	Message string      `json:"message"`
 	Record  interface{} `json:"record"`
 	Time    string      `json:"time"`
+}
+type C_InfoLogin struct {
+	Client_company  string `json:"client_company"`
+	Client_username string `json:"client_username"`
+	Client_credit   int    `json:"client_credit"`
 }
 
 func CheckToken(c *fiber.Ctx) error {
@@ -71,19 +77,19 @@ func CheckToken(c *fiber.Ctx) error {
 		client_company = "NUKE"
 		client_username = "developer"
 		client_name = "developer"
-		client_credit = 100000
+		client_credit = 1000000
 		result = true
 	case "12345BvXzabGp34jJlKvnC6wCrr3pLCwBzsLoSzl4k=":
 		client_company = "NUKE"
 		client_username = "developer12"
 		client_name = "developer12"
-		client_credit = 500000
+		client_credit = 5000000
 		result = true
 	case "12345BvXzabGp34jJlKvnC6wCrr3pLCwBzsL1234567":
 		client_company = "NUKE"
 		client_username = "developer55"
 		client_name = "developer55"
-		client_credit = 1000000
+		client_credit = 10000000
 		result = true
 	}
 
@@ -95,6 +101,22 @@ func CheckToken(c *fiber.Ctx) error {
 			})
 
 	} else {
+		logininfo_redis, flag_loginfo := helpers.GetRedis(fieldlogin_redis + "_" + client.Token)
+		jsonredis_info := []byte(logininfo_redis)
+		client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
+		client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
+		client_creditRD, _ := jsonparser.GetInt(jsonredis_info, "client_credit")
+		fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
+		if flag_loginfo {
+			client_credit = int(client_creditRD)
+		} else {
+			var objlogin_record C_InfoLogin
+			objlogin_record.Client_company = client_company
+			objlogin_record.Client_username = client_username
+			objlogin_record.Client_credit = client_credit
+			helpers.SetRedis(fieldlogin_redis+"_"+client.Token, objlogin_record, 1440*time.Minute)
+		}
+
 		var obj_record c_tai
 		var obj entities.Model_listbet
 		var arraobj []entities.Model_listbet
@@ -225,65 +247,80 @@ func ListInvoiceclient(c *fiber.Ctx) error {
 		})
 	}
 
-	var obj entities.Model_invoiceclient
-	var arraobj []entities.Model_invoiceclient
-	render_page := time.Now()
-	resultredis, flag := helpers.GetRedis(strings.ToLower(client.Invoice_company) + ":" + invoice_client_redis + "_" + strings.ToLower(client.Invoice_username))
-	jsonredis := []byte(resultredis)
-	record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
-	jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		invoiceclient_id, _ := jsonparser.GetString(value, "invoiceclient_id")
-		invoiceclient_date, _ := jsonparser.GetString(value, "invoiceclient_date")
-		invoiceclient_result, _ := jsonparser.GetString(value, "invoiceclient_result")
-		invoiceclient_username, _ := jsonparser.GetString(value, "invoiceclient_username")
-		invoiceclient_nomor, _ := jsonparser.GetString(value, "invoiceclient_nomor")
-		invoiceclient_tipebet, _ := jsonparser.GetString(value, "invoiceclient_tipebet")
-		invoiceclient_bet, _ := jsonparser.GetInt(value, "invoiceclient_bet")
-		invoiceclient_win, _ := jsonparser.GetInt(value, "invoiceclient_win")
-		invoiceclient_multiplier, _ := jsonparser.GetFloat(value, "invoiceclient_multiplier")
-		invoiceclient_status, _ := jsonparser.GetString(value, "invoiceclient_status")
-		invoiceclient_status_css, _ := jsonparser.GetString(value, "invoiceclient_status_css")
+	logininfo_redis, flag_loginfo := helpers.GetRedis(fieldlogin_redis + "_" + client.Client_token)
+	jsonredis_info := []byte(logininfo_redis)
+	client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
+	client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
+	// client_creditRD, _ := jsonparser.GetInt(jsonredis, "client_credit")
+	fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
+	if flag_loginfo {
+		var obj entities.Model_invoiceclient
+		var arraobj []entities.Model_invoiceclient
+		render_page := time.Now()
+		resultredis, flag := helpers.GetRedis(strings.ToLower(client_companyRD) + ":" + invoice_client_redis + "_" + strings.ToLower(client_usernameRD))
+		jsonredis := []byte(resultredis)
+		record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
+		jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			invoiceclient_id, _ := jsonparser.GetString(value, "invoiceclient_id")
+			invoiceclient_date, _ := jsonparser.GetString(value, "invoiceclient_date")
+			invoiceclient_result, _ := jsonparser.GetString(value, "invoiceclient_result")
+			invoiceclient_username, _ := jsonparser.GetString(value, "invoiceclient_username")
+			invoiceclient_nomor, _ := jsonparser.GetString(value, "invoiceclient_nomor")
+			invoiceclient_tipebet, _ := jsonparser.GetString(value, "invoiceclient_tipebet")
+			invoiceclient_bet, _ := jsonparser.GetInt(value, "invoiceclient_bet")
+			invoiceclient_win, _ := jsonparser.GetInt(value, "invoiceclient_win")
+			invoiceclient_multiplier, _ := jsonparser.GetFloat(value, "invoiceclient_multiplier")
+			invoiceclient_status, _ := jsonparser.GetString(value, "invoiceclient_status")
+			invoiceclient_status_css, _ := jsonparser.GetString(value, "invoiceclient_status_css")
 
-		obj.Invoiceclient_id = invoiceclient_id
-		obj.Invoiceclient_date = invoiceclient_date
-		obj.Invoiceclient_result = invoiceclient_result
-		obj.Invoiceclient_username = invoiceclient_username
-		obj.Invoiceclient_nomor = invoiceclient_nomor
-		obj.Invoiceclient_tipebet = invoiceclient_tipebet
-		obj.Invoiceclient_bet = int(invoiceclient_bet)
-		obj.Invoiceclient_win = int(invoiceclient_win)
-		obj.Invoiceclient_multiplier = float64(invoiceclient_multiplier)
-		obj.Invoiceclient_status = invoiceclient_status
-		obj.Invoiceclient_status_css = invoiceclient_status_css
-		arraobj = append(arraobj, obj)
-	})
+			obj.Invoiceclient_id = invoiceclient_id
+			obj.Invoiceclient_date = invoiceclient_date
+			obj.Invoiceclient_result = invoiceclient_result
+			obj.Invoiceclient_username = invoiceclient_username
+			obj.Invoiceclient_nomor = invoiceclient_nomor
+			obj.Invoiceclient_tipebet = invoiceclient_tipebet
+			obj.Invoiceclient_bet = int(invoiceclient_bet)
+			obj.Invoiceclient_win = int(invoiceclient_win)
+			obj.Invoiceclient_multiplier = float64(invoiceclient_multiplier)
+			obj.Invoiceclient_status = invoiceclient_status
+			obj.Invoiceclient_status_css = invoiceclient_status_css
+			arraobj = append(arraobj, obj)
+		})
 
-	if !flag {
-		result, err := models.Fetch_invoice_client(client.Invoice_company, client.Invoice_username)
-		if err != nil {
-			c.Status(fiber.StatusBadRequest)
+		if !flag {
+			result, err := models.Fetch_invoice_client(strings.ToLower(client_companyRD), strings.ToLower(client_usernameRD))
+			if err != nil {
+				c.Status(fiber.StatusBadRequest)
+				return c.JSON(fiber.Map{
+					"status":  fiber.StatusBadRequest,
+					"message": err.Error(),
+					"record":  nil,
+				})
+			}
+			helpers.SetRedis(strings.ToLower(client_companyRD)+":"+invoice_client_redis+"_"+strings.ToLower(client_usernameRD), result, 5*time.Minute)
+			fmt.Printf("INVOICECLIENT DATABASE %s-%s\n", client_companyRD, client_usernameRD)
+			return c.JSON(result)
+		} else {
+			fmt.Printf("INVOICECLIENT CACHE %s-%s\n", client_companyRD, client_usernameRD)
 			return c.JSON(fiber.Map{
-				"status":  fiber.StatusBadRequest,
-				"message": err.Error(),
-				"record":  nil,
+				"status":  fiber.StatusOK,
+				"message": "Success",
+				"record":  arraobj,
+				"time":    time.Since(render_page).String(),
 			})
 		}
-		helpers.SetRedis(strings.ToLower(client.Invoice_company)+":"+invoice_client_redis+"_"+strings.ToLower(client.Invoice_username), result, 5*time.Minute)
-		fmt.Printf("INVOICECLIENT DATABASE %s-%s\n", client.Invoice_company, client.Invoice_username)
-		return c.JSON(result)
 	} else {
-		fmt.Printf("INVOICECLIENT CACHE %s-%s\n", client.Invoice_company, client.Invoice_username)
-		return c.JSON(fiber.Map{
-			"status":  fiber.StatusOK,
-			"message": "Success",
-			"record":  arraobj,
-			"time":    time.Since(render_page).String(),
-		})
+		return c.Status(fiber.StatusUnauthorized).JSON(
+			fiber.Map{
+				"status":  fiber.StatusBadRequest,
+				"message": "Data Not Found",
+			})
 	}
+
 }
 func ListResult(c *fiber.Ctx) error {
 	var errors []*helpers.ErrorResponse
-	client := new(entities.Controller_result)
+	client := new(entities.Controller_invoice)
 	validate := validator.New()
 	if err := c.BodyParser(client); err != nil {
 		c.Status(fiber.StatusBadRequest)
@@ -310,44 +347,59 @@ func ListResult(c *fiber.Ctx) error {
 		})
 	}
 
-	var obj entities.Model_result
-	var arraobj []entities.Model_result
-	render_page := time.Now()
-	resultredis, flag := helpers.GetRedis(strings.ToLower(client.Invoice_company) + ":" + invoice_result_redis)
-	jsonredis := []byte(resultredis)
-	record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
-	jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		result_invoice, _ := jsonparser.GetString(value, "result_invoice")
-		result_date, _ := jsonparser.GetString(value, "result_date")
-		result_result, _ := jsonparser.GetString(value, "result_result")
+	logininfo_redis, flag_loginfo := helpers.GetRedis(fieldlogin_redis + "_" + client.Client_token)
+	jsonredis_info := []byte(logininfo_redis)
+	client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
+	client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
+	// client_creditRD, _ := jsonparser.GetInt(jsonredis, "client_credit")
+	fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
 
-		obj.Result_invoice = result_invoice
-		obj.Result_date = result_date
-		obj.Result_result = result_result
-		arraobj = append(arraobj, obj)
-	})
+	if flag_loginfo {
+		var obj entities.Model_result
+		var arraobj []entities.Model_result
+		render_page := time.Now()
+		resultredis, flag := helpers.GetRedis(strings.ToLower(client_companyRD) + ":" + invoice_result_redis)
+		jsonredis := []byte(resultredis)
+		record_RD, _, _, _ := jsonparser.Get(jsonredis, "record")
+		jsonparser.ArrayEach(record_RD, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			result_invoice, _ := jsonparser.GetString(value, "result_invoice")
+			result_date, _ := jsonparser.GetString(value, "result_date")
+			result_result, _ := jsonparser.GetString(value, "result_result")
 
-	if !flag {
-		result, err := models.Fetch_result(client.Invoice_company)
-		if err != nil {
-			c.Status(fiber.StatusBadRequest)
+			obj.Result_invoice = result_invoice
+			obj.Result_date = result_date
+			obj.Result_result = result_result
+			arraobj = append(arraobj, obj)
+		})
+
+		if !flag {
+			result, err := models.Fetch_result(strings.ToLower(client_companyRD))
+			if err != nil {
+				c.Status(fiber.StatusBadRequest)
+				return c.JSON(fiber.Map{
+					"status":  fiber.StatusBadRequest,
+					"message": err.Error(),
+					"record":  nil,
+				})
+			}
+			helpers.SetRedis(strings.ToLower(client_companyRD)+":"+invoice_result_redis, result, 30*time.Minute)
+			fmt.Printf("RESULT DATABASE %s\n", client_companyRD)
+			return c.JSON(result)
+		} else {
+			fmt.Printf("RESULT CACHE %s\n", client_companyRD)
 			return c.JSON(fiber.Map{
-				"status":  fiber.StatusBadRequest,
-				"message": err.Error(),
-				"record":  nil,
+				"status":  fiber.StatusOK,
+				"message": "Success",
+				"record":  arraobj,
+				"time":    time.Since(render_page).String(),
 			})
 		}
-		helpers.SetRedis(strings.ToLower(client.Invoice_company)+":"+invoice_result_redis, result, 30*time.Minute)
-		fmt.Printf("RESULT DATABASE %s\n", client.Invoice_company)
-		return c.JSON(result)
 	} else {
-		fmt.Printf("RESULT CACHE %s\n", client.Invoice_company)
-		return c.JSON(fiber.Map{
-			"status":  fiber.StatusOK,
-			"message": "Success",
-			"record":  arraobj,
-			"time":    time.Since(render_page).String(),
-		})
+		return c.Status(fiber.StatusUnauthorized).JSON(
+			fiber.Map{
+				"status":  fiber.StatusBadRequest,
+				"message": "Data Not Found",
+			})
 	}
 }
 func TransaksidetailSave(c *fiber.Ctx) error {
@@ -384,12 +436,57 @@ func TransaksidetailSave(c *fiber.Ctx) error {
 	// temp_decp := helpers.Decryption(name)
 	// client_admin, _ := helpers.Parsing_Decry(temp_decp, "==")
 
-	//idcompany, idtransaksi, username, listdatabet string, total_bet int
-	result, err := models.Save_transaksidetail(client.Transaksidetail_company,
-		client.Transaksidetail_idtransaksi, client.Transaksidetail_username,
-		client.Transaksidetail_listdatabet, client.Transaksidetail_totalbet)
+	logininfo_redis, flag_loginfo := helpers.GetRedis(fieldlogin_redis + "_" + client.Client_token)
+	jsonredis_info := []byte(logininfo_redis)
+	client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
+	client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
+	client_creditRD, _ := jsonparser.GetInt(jsonredis_info, "client_credit")
+	fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
 
-	if err != nil {
+	if flag_loginfo {
+		if int(client_creditRD) > client.Transaksidetail_totalbet {
+			var objlogin_record C_InfoLogin
+			objlogin_record.Client_company = client_companyRD
+			objlogin_record.Client_username = client_usernameRD
+			objlogin_record.Client_credit = int(client_creditRD) - client.Transaksidetail_totalbet
+			helpers.SetRedis(fieldlogin_redis+"_"+client.Client_token, objlogin_record, 1440*time.Minute)
+
+			//idcompany, idtransaksi, username, listdatabet string, total_bet int
+			result, err := models.Save_transaksidetail(strings.ToLower(client_companyRD),
+				client.Transaksidetail_idtransaksi, strings.ToLower(client_usernameRD),
+				client.Transaksidetail_listdatabet, client.Transaksidetail_totalbet)
+
+			if err != nil {
+				c.Status(fiber.StatusBadRequest)
+				return c.JSON(fiber.Map{
+					"status":  fiber.StatusBadRequest,
+					"message": err.Error(),
+					"record":  nil,
+				})
+			}
+			_deleteredis_wigo(client_companyRD, client_usernameRD)
+			return c.JSON(result)
+		} else {
+			return c.Status(fiber.StatusUnauthorized).JSON(
+				fiber.Map{
+					"status":  fiber.StatusBadRequest,
+					"message": "Credit Tidak Cukup",
+				})
+		}
+
+	} else {
+		return c.Status(fiber.StatusUnauthorized).JSON(
+			fiber.Map{
+				"status":  fiber.StatusBadRequest,
+				"message": "Data Not Found",
+			})
+	}
+}
+func Balance(c *fiber.Ctx) error {
+	var errors []*helpers.ErrorResponse
+	client := new(entities.Controller_invoice)
+	validate := validator.New()
+	if err := c.BodyParser(client); err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
 			"status":  fiber.StatusBadRequest,
@@ -397,10 +494,45 @@ func TransaksidetailSave(c *fiber.Ctx) error {
 			"record":  nil,
 		})
 	}
-	_deleteredis_wigo(client.Transaksidetail_company, client.Transaksidetail_username)
-	return c.JSON(result)
-}
 
+	err := validate.Struct(client)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			var element helpers.ErrorResponse
+			element.Field = err.StructField()
+			element.Tag = err.Tag()
+			errors = append(errors, &element)
+		}
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "validation",
+			"record":  errors,
+		})
+	}
+	render_page := time.Now()
+	logininfo_redis, flag_loginfo := helpers.GetRedis(fieldlogin_redis + "_" + client.Client_token)
+	jsonredis_info := []byte(logininfo_redis)
+	// client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
+	// client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
+	client_creditRD, _ := jsonparser.GetInt(jsonredis_info, "client_credit")
+	// fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
+
+	if flag_loginfo {
+		return c.JSON(fiber.Map{
+			"status":  fiber.StatusOK,
+			"message": "Success",
+			"credit":  client_creditRD,
+			"time":    time.Since(render_page).String(),
+		})
+	} else {
+		return c.Status(fiber.StatusUnauthorized).JSON(
+			fiber.Map{
+				"status":  fiber.StatusBadRequest,
+				"message": "Data Not Found",
+			})
+	}
+}
 func _deleteredis_wigo(company, username string) {
 	val_invoice := helpers.DeleteRedis(strings.ToLower(company) + ":" + invoice_client_redis + "_" + strings.ToLower(username))
 	fmt.Printf("Redis Delete INVOICE CLIENT : %d - %s %s\n", val_invoice, company, username)

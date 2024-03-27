@@ -34,12 +34,9 @@ type Controller_default struct {
 	Company string `json:"company" validate:"required"`
 }
 type Controller_invoice struct {
-	Invoice_company  string `json:"invoice_company" validate:"required"`
-	Invoice_username string `json:"invoice_username" validate:"required"`
+	Client_token string `json:"client_token" validate:"required"`
 }
-type Controller_result struct {
-	Invoice_company string `json:"invoice_company" validate:"required"`
-}
+
 type Controller_invoicedetail struct {
 	Invoice_id      string `json:"invoice_id" validate:"required"`
 	Invoice_company string `json:"invoice_company" validate:"required"`
@@ -51,9 +48,8 @@ type Controller_transaksisave struct {
 
 // idtransaksi, resulcard_win string, round_bet, bet, c_before, c_after, win, idpoin int
 type Controller_transaksidetailsave struct {
-	Transaksidetail_company     string `json:"transaksidetail_company" validate:"required"`
+	Client_token                string `json:"client_token" validate:"required"`
 	Transaksidetail_idtransaksi string `json:"transaksidetail_idtransaksi" validate:"required"`
-	Transaksidetail_username    string `json:"transaksidetail_username" validate:"required"`
 	Transaksidetail_totalbet    int    `json:"transaksidetail_totalbet" validate:"required"`
 	Transaksidetail_listdatabet string `json:"transaksidetail_listdatabet" validate:"required"`
 }
