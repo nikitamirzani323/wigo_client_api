@@ -121,7 +121,7 @@ func CheckToken(c *fiber.Ctx) error {
 		var obj_record c_tai
 		var obj entities.Model_listbet
 		var arraobj []entities.Model_listbet
-		resultredis, flag := helpers.GetRedis("nuke:" + listmoney_redis)
+		resultredis, flag := helpers.GetRedis(strings.ToLower(client_company) + ":" + listmoney_redis)
 		jsonredis := []byte(resultredis)
 		status_RD, _ := jsonparser.GetInt(jsonredis, "status")
 		message_RD, _ := jsonparser.GetString(jsonredis, "message")
@@ -137,7 +137,7 @@ func CheckToken(c *fiber.Ctx) error {
 
 		//CONFIG
 
-		fieldconfig_redis := "nuke:12D30S:CONFIG"
+		fieldconfig_redis := strings.ToLower(client_company) + ":12D30S:CONFIG"
 		resultredis_conf, flag_conf := helpers.GetRedis(fieldconfig_redis)
 		jsonredis_conf := []byte(resultredis_conf)
 		// currRD, _ := jsonparser.GetString(jsonredis_conf, "curr")
