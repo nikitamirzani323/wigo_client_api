@@ -549,29 +549,31 @@ func _GetInfo_Transaksi(table, idtransaksi string) string {
 
 	return status
 }
-func GetInfo_CompanyConf(idcompany string) (float64, float64, float64, string, string) {
+func GetInfo_CompanyConf(idcompany string) (float64, float64, float64, float64, float64, string, string) {
 	con := db.CreateCon()
 	ctx := context.Background()
 	win_angka := 0.0
 	win_redblack := 0.0
 	win_line := 0.0
+	win_zona := 0.0
+	win_jackpot := 0.0
 	status_redblack := "N"
 	status_maintenance := "N"
 
 	sql_select := ""
 	sql_select += "SELECT "
-	sql_select += "conf_2digit_30_win, conf_2digit_30_win_redblack,conf_2digit_30_win_line,  "
+	sql_select += "conf_2digit_30_win, conf_2digit_30_win_redblack,conf_2digit_30_win_line,conf_2digit_30_win_zona,conf_2digit_30_win_jackpot,  "
 	sql_select += "conf_2digit_30_status_redblack_line,conf_2digit_30_maintenance  "
 	sql_select += "FROM " + configs.DB_tbl_mst_company_config + " "
 	sql_select += "WHERE idcompany='" + idcompany + "'   "
 
 	row := con.QueryRowContext(ctx, sql_select)
-	switch e := row.Scan(&win_angka, &win_redblack, &win_line, &status_redblack, &status_maintenance); e {
+	switch e := row.Scan(&win_angka, &win_redblack, &win_line, &win_zona, &win_jackpot, &status_redblack, &status_maintenance); e {
 	case sql.ErrNoRows:
 	case nil:
 	default:
 		helpers.ErrorCheck(e)
 	}
 
-	return win_angka, win_redblack, win_line, status_redblack, status_maintenance
+	return win_angka, win_redblack, win_line, win_zona, win_jackpot, status_redblack, status_maintenance
 }

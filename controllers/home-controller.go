@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -135,7 +136,8 @@ func CheckToken(c *fiber.Ctx) error {
 		obj_record.Record = arraobj
 
 		//CONFIG
-		fieldconfig_redis := "CONFIG_ALL_NUKE"
+
+		fieldconfig_redis := "nuke:12D30S:CONFIG"
 		resultredis_conf, flag_conf := helpers.GetRedis(fieldconfig_redis)
 		jsonredis_conf := []byte(resultredis_conf)
 		// currRD, _ := jsonparser.GetString(jsonredis_conf, "curr")
@@ -144,31 +146,40 @@ func CheckToken(c *fiber.Ctx) error {
 		win_angkaRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_angka")
 		win_redblackRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_redblack")
 		win_lineRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_line")
+		win_zonaRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_zona")
+		win_jackpotRD, _ := jsonparser.GetFloat(jsonredis_conf, "win_jackpot")
 		status_redblacklineRD, _ := jsonparser.GetString(jsonredis_conf, "status_redblackline")
 		sstatus_maintenanceRD, _ := jsonparser.GetString(jsonredis_conf, "status_maintenance")
 
 		engine_win_angka := 0.0
 		engine_win_redblack := 0.0
 		engine_win_line := 0.0
+		engine_win_zona := 0.0
+		engine_win_jackpot := 0.0
 		engine_status_game_redblackline := ""
 		engine_status_maintenance := ""
 
 		if flag_conf {
 			fmt.Println("CONF CACHE")
-
+			log.Println(win_zonaRD)
+			log.Println(win_jackpotRD)
 			engine_win_angka = float64(win_angkaRD)
 			engine_win_redblack = float64(win_redblackRD)
 			engine_win_line = float64(win_lineRD)
+			engine_win_zona = float64(win_zonaRD)
+			engine_win_jackpot = float64(win_jackpotRD)
 			engine_status_game_redblackline = status_redblacklineRD
 			engine_status_maintenance = sstatus_maintenanceRD
 		} else {
 			fmt.Println("CONF DATABASE")
 
-			win_angkaDB, win_redblackDB, win_lineDB, status_redblacklineDB, status_maintenanceDB := models.GetInfo_CompanyConf("NUKE")
+			win_angkaDB, win_redblackDB, win_lineDB, win_zonaDB, win_jackpotDB, status_redblacklineDB, status_maintenanceDB := models.GetInfo_CompanyConf("NUKE")
 
 			engine_win_angka = win_angkaDB
 			engine_win_redblack = win_redblackDB
 			engine_win_line = win_lineDB
+			engine_win_zona = win_zonaDB
+			engine_win_jackpot = win_jackpotDB
 			engine_status_game_redblackline = status_redblacklineDB
 			engine_status_maintenance = status_maintenanceDB
 		}
@@ -195,6 +206,8 @@ func CheckToken(c *fiber.Ctx) error {
 				"engine_multiplier_angka":         engine_win_angka,
 				"engine_multiplier_redblack":      engine_win_redblack,
 				"engine_multiplier_line":          engine_win_line,
+				"engine_multiplier_zona":          engine_win_zona,
+				"engine_multiplier_jackpot":       engine_win_jackpot,
 				"engine_status_game_redblackline": engine_status_game_redblackline,
 				"engine_status_maintenance":       engine_status_maintenance,
 			})
@@ -210,6 +223,8 @@ func CheckToken(c *fiber.Ctx) error {
 				"engine_multiplier_angka":         engine_win_angka,
 				"engine_multiplier_redblack":      engine_win_redblack,
 				"engine_multiplier_line":          engine_win_line,
+				"engine_multiplier_zona":          engine_win_zona,
+				"engine_multiplier_jackpot":       engine_win_jackpot,
 				"engine_status_game_redblackline": engine_status_game_redblackline,
 				"engine_status_maintenance":       engine_status_maintenance,
 			})
@@ -252,7 +267,7 @@ func ListInvoiceclient(c *fiber.Ctx) error {
 	client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
 	client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
 	// client_creditRD, _ := jsonparser.GetInt(jsonredis, "client_credit")
-	fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
+	// fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
 	if flag_loginfo {
 		var obj entities.Model_invoiceclient
 		var arraobj []entities.Model_invoiceclient
@@ -350,9 +365,9 @@ func ListResult(c *fiber.Ctx) error {
 	logininfo_redis, flag_loginfo := helpers.GetRedis(fieldlogin_redis + "_" + client.Client_token)
 	jsonredis_info := []byte(logininfo_redis)
 	client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
-	client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
+	// client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
 	// client_creditRD, _ := jsonparser.GetInt(jsonredis, "client_credit")
-	fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
+	// fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
 
 	if flag_loginfo {
 		var obj entities.Model_result
@@ -441,7 +456,7 @@ func TransaksidetailSave(c *fiber.Ctx) error {
 	client_companyRD, _ := jsonparser.GetString(jsonredis_info, "client_company")
 	client_usernameRD, _ := jsonparser.GetString(jsonredis_info, "client_username")
 	client_creditRD, _ := jsonparser.GetInt(jsonredis_info, "client_credit")
-	fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
+	// fmt.Println("Data Redis : " + client_companyRD + " - " + client_usernameRD)
 
 	if flag_loginfo {
 		if int(client_creditRD) > client.Transaksidetail_totalbet {
