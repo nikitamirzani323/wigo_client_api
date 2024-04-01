@@ -189,6 +189,8 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 	status := "CLOSED"
 
 	dayendmonth := helpers.GetEndRangeDate(tglnow.Format("MM"))
+	tglstart_daily := tglnow.Format("YYYY-MM-DD") + " 00:00:00"
+	tglend_daily := tglnow.Format("YYYY-MM-DD") + " 23:59:59"
 	tglstart := tglnow.Format("YYYY-MM-") + "01 00:00:00"
 	tglend := tglnow.Format("YYYY-MM-") + dayendmonth + " 23:59:59"
 	fmt.Println("tgl start :" + tglstart)
@@ -224,6 +226,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 		}
 
 		totalbet := 0
+		var objinvoicedaily Invoicemonth
 		var objinvoicemonth Invoicemonth
 		var objinvoice_parent Invoicedetail
 		// var arraobjinvoice_parent []Invoicedetail
@@ -307,12 +310,17 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			arraobjinvoice_sumary = append(arraobjinvoice_sumary, objinvoice_sumary)
 
 		})
+		tglstartdaily_redis := tglnow.Format("YYYYMMDD") + "000000"
+		tglenddaily_redis := tglnow.Format("YYYYMMDD") + "235959"
+
 		tglstart_redis := tglnow.Format("YYYYMM") + "01000000"
 		tglend_redis := tglnow.Format("YYYYMM") + dayendmonth + "235959"
 
+		keyredis_invoicedaily := strings.ToLower(idcompany) + ":12D30S:invoicedaily_" + tglstartdaily_redis + tglenddaily_redis
 		keyredis_invoicemonth := strings.ToLower(idcompany) + ":12D30S:invoicemonth_" + tglstart_redis + tglend_redis
 		keyredis := strings.ToLower(idcompany) + ":12D30S:invoice_" + idtransaksi
 		resultRD_invoice, flag_invoice := helpers.GetRedis(keyredis)
+		resultRD_invoicedaily, flag_invoicedaily := helpers.GetRedis(keyredis_invoicedaily)
 		resultRD_invoicemonth, flag_invoicemonth := helpers.GetRedis(keyredis_invoicemonth)
 		if !flag_invoice {
 			fmt.Println("INVOICE DATABASE")
@@ -455,6 +463,28 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			objinvoicemonth.Totalwin = int(totalwin_RD)
 
 			helpers.SetRedis(keyredis_invoicemonth, objinvoicemonth, 0)
+		}
+
+		if !flag_invoicedaily {
+			fmt.Println("INVOICE DAILY DATABASE")
+			totalbet_DB, totalwin_DB := _GetTotalBet_ByDate(tbl_trx_transaksi, tglstart_daily, tglend_daily)
+
+			objinvoicedaily.Totalbet = totalbet_DB
+			objinvoicedaily.Totalwin = totalwin_DB
+
+			helpers.SetRedis(keyredis_invoicedaily, objinvoicedaily, 2880*time.Minute)
+		} else {
+			fmt.Println("INVOICE DAILY CACHE")
+			jsonredis := []byte(resultRD_invoicedaily)
+			totalbet_RD, _ := jsonparser.GetInt(jsonredis, "totalbet")
+			totalwin_RD, _ := jsonparser.GetInt(jsonredis, "totalwin")
+
+			totalbetnew_month := totalbet + int(totalbet_RD)
+
+			objinvoicedaily.Totalbet = totalbetnew_month
+			objinvoicedaily.Totalwin = int(totalwin_RD)
+
+			helpers.SetRedis(keyredis_invoicedaily, objinvoicedaily, 2880*time.Minute)
 		}
 	}
 
