@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -57,6 +58,62 @@ func Get_counter(field_column string) int {
 	}
 	return idrecord_counter
 }
+func Update_counter(field_column string, last_count int) int {
+	con := db.CreateCon()
+	ctx := context.Background()
+	idrecord_counter := 0
+	sqlcounter := `SELECT 
+					counter 
+					FROM ` + configs.DB_tbl_counter + ` 
+					WHERE nmcounter = $1 
+					order by counter desc
+					limit 1
+				`
+	var counter int = 0
+
+	if last_count > 1 {
+		idrecord_counter = int(last_count)
+		stmt, e := con.PrepareContext(ctx, "UPDATE "+configs.DB_tbl_counter+" SET counter=$1 WHERE nmcounter=$2 ")
+		helpers.ErrorCheck(e)
+		defer stmt.Close()
+		res, e := stmt.ExecContext(ctx, idrecord_counter, field_column)
+		helpers.ErrorCheck(e)
+		a, e := res.RowsAffected()
+		helpers.ErrorCheck(e)
+		if a > 0 {
+			// log.Println("UPDATE COUNTER")
+		} else {
+			log.Panic(e)
+		}
+	} else {
+		row := con.QueryRowContext(ctx, sqlcounter, field_column)
+		switch e := row.Scan(&counter); e {
+		case sql.ErrNoRows:
+			log.Println("No counter recorded!")
+		case nil:
+			// log.Println(counter)
+		default:
+			log.Panic(e)
+		}
+		if counter == 0 {
+			stmt, e := con.PrepareContext(ctx, "insert into "+configs.DB_tbl_counter+" (nmcounter, counter) values ($1, $2)")
+			helpers.ErrorCheck(e)
+			defer stmt.Close()
+			res, e := stmt.ExecContext(ctx, field_column, last_count)
+			helpers.ErrorCheck(e)
+			id, e := res.RowsAffected()
+			helpers.ErrorCheck(e)
+			if id > 0 {
+				idrecord_counter = 1
+			} else {
+				log.Panic(e)
+			}
+		}
+	}
+
+	return idrecord_counter
+}
+
 func Get_listitemsearch(data, pemisah, search string) bool {
 	flag := false
 	temp := strings.Split(data, pemisah)

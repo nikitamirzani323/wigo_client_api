@@ -3,6 +3,8 @@ package helpers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -83,4 +85,33 @@ func DeleteRedis(key string) int {
 	value = int(rdb.Del(ctx, key).Val())
 	rdb.Close()
 	return value
+}
+func IncrPipeRedis(key, db string, expire time.Duration) string {
+	dbHost := os.Getenv("DB_REDIS_HOST") + ":" + os.Getenv("DB_REDIS_PORT")
+	dbPass := os.Getenv("DB_REDIS_PASSWORD")
+	dbName, _ := strconv.Atoi(os.Getenv("DB_REDIS_NAME"))
+
+	if db != "" {
+		dbName, _ = strconv.Atoi(db)
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     dbHost,
+		Password: dbPass,
+		DB:       dbName,
+	})
+	defer rdb.Close()
+	pipe := rdb.Pipeline()
+
+	incr := pipe.Incr(ctx, key)
+	pipe.Expire(ctx, key, expire)
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		log.Println("increment redis error: ", err)
+	}
+	s := fmt.Sprintf("%d", incr.Val())
+
+	// The value is available only after Exec is called.
+	return s
 }

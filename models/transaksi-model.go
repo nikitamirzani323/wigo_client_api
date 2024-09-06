@@ -181,7 +181,7 @@ func Fetch_result(idcompany string) (helpers.Response, error) {
 
 	return res, nil
 }
-func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, total_bet int) (helpers.Response, error) {
+func Save_transaksidetail(idcompany, idtransaksi, username, playerinvoice, listdatabet string, total_bet, betround int) (helpers.Response, error) {
 	var res helpers.Response
 	msg := "Failed"
 	tglnow, _ := goment.New()
@@ -248,12 +248,12 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 				insert into
 				` + tbl_trx_transaksidetail + ` (
 					idtransaksidetail, idtransaksi , username_client, ipaddress_client, browser_client, device_client, tipebet, nomor, 
-					bet, multiplier, status_transaksidetail, 
+					bet, multiplier, status_transaksidetail, betround, playerinvoice, 
 					create_transaksidetail, createdate_transaksidetail  
 				) values (
 					$1, $2, $3, $4, $5, $6, $7, $8, 
-					$9, $10, $11,   
-					$12, $13      
+					$9, $10, $11, $12, $13,    
+					$14, $15      
 				)
 			`
 
@@ -262,7 +262,7 @@ func Save_transaksidetail(idcompany, idtransaksi, username, listdatabet string, 
 			idrecrod_value := tglnow.Format("YY") + tglnow.Format("MM") + tglnow.Format("DD") + tglnow.Format("HH") + strconv.Itoa(idrecord_counter)
 			flag_insert, msg_insert := Exec_SQL(sql_insert, tbl_trx_transaksidetail, "INSERT",
 				idrecrod_value, idtransaksi, username, ipaddress, mobile, device, tipebet, nomor,
-				bet, multiplier, "RUNNING",
+				bet, multiplier, "RUNNING", betround, playerinvoice,
 				"SYSTEM", tglnow.Format("YYYY-MM-DD HH:mm:ss"))
 
 			if flag_insert {

@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -466,10 +467,26 @@ func TransaksidetailSave(c *fiber.Ctx) error {
 			objlogin_record.Client_credit = int(client_creditRD) - client.Transaksidetail_totalbet
 			helpers.SetRedis(fieldlogin_redis+"_"+client.Client_token, objlogin_record, 1440*time.Minute)
 
-			//idcompany, idtransaksi, username, listdatabet string, total_bet int
+			//BETROUND + GENERATE INVOICE
+			round_redis := "round_detail_" + strings.ToLower(client_companyRD) + ":" + client.Transaksidetail_idtransaksi
+			_, flaground_redis := helpers.GetRedis(round_redis)
+			if !flaground_redis {
+				result := models.Get_counter(round_redis)
+				fmt.Println("init redis betround")
+				helpers.SetRedis(round_redis, result-1, 24*time.Hour)
+			}
+
+			resultround := helpers.IncrPipeRedis(round_redis, "2", 24*time.Hour)
+			roundBet, _ := strconv.Atoi(resultround)
+			invoiceplayer := client.Transaksidetail_idtransaksi + strconv.Itoa(roundBet)
+			fmt.Println(client_usernameRD, ": bet: get generatedinvoice: ", invoiceplayer)
+
+			go models.Update_counter(round_redis, roundBet)
+
+			//idcompany, idtransaksi, username, playerinvoice, listdatabet string, total_bet, betround int
 			result, err := models.Save_transaksidetail(strings.ToLower(client_companyRD),
-				client.Transaksidetail_idtransaksi, strings.ToLower(client_usernameRD),
-				client.Transaksidetail_listdatabet, client.Transaksidetail_totalbet)
+				client.Transaksidetail_idtransaksi, strings.ToLower(client_usernameRD), invoiceplayer,
+				client.Transaksidetail_listdatabet, client.Transaksidetail_totalbet, roundBet)
 
 			if err != nil {
 				c.Status(fiber.StatusBadRequest)
